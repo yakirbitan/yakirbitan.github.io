@@ -1,10 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Yakir Bitan</title>
-</head>
-<body>
-<h1>Yakir Bitan Website</h1>
-</body>
-</html>
+---
+layout: default
+---
+
+
+{% include career-profile.html %}
+
+{% unless site.data.data.sidebar.education %}
+  {% include education.html %}
+{% endunless %}
+
+{% include experiences.html %}
+
