@@ -17,6 +17,12 @@
     padding: 30px;
   }
 
+  .sidebar-details-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
   .main-wrapper .time {
     position: static;
     display: block;
