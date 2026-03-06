@@ -53,10 +53,11 @@
     position: absolute; top: 0; left: 0; bottom: 0;
     width: 260px; background: #1e293b;
     padding: 20px 0;
-    padding-top: calc(20px + env(safe-area-inset-top));
+    padding-top: calc(60px + env(safe-area-inset-top));
     box-shadow: 4px 0 20px rgba(0,0,0,0.5);
     transform: translateX(-100%);
     transition: transform 0.25s ease;
+    overflow-y: auto;
   }
   .mobile-menu.open .mobile-menu-content {
     transform: translateX(0);
@@ -151,6 +152,17 @@
   .tier-rainbow { gap: 6px !important; }
   .tr-item { padding: 5px 10px !important; font-size: 11px !important; }
 
+  /* ─── Cloud tables (IaaS/PaaS/SaaS, Rosetta Stone) ─── */
+  .compare-table { font-size: 11px !important; }
+  .compare-table th { padding: 6px 6px !important; font-size: 11px !important; }
+  .compare-table td { padding: 6px 6px !important; font-size: 11px !important; }
+  .compare-table th:first-child { width: 70px !important; }
+
+  /* ─── LLM scrolling fix ─── */
+  .slides-wrapper { overflow-y: auto !important; overflow-x: hidden !important; }
+  .slide { overflow-y: auto !important; align-items: flex-start !important; }
+  .slide-inner { padding-bottom: 30px !important; }
+
   /* ─── LLM-specific ─── */
   .concept-grid { grid-template-columns: 1fr !important; }
   .step-grid { grid-template-columns: 1fr !important; }
@@ -159,6 +171,34 @@
   .token-grid { grid-template-columns: 1fr !important; }
   .timeline-grid { grid-template-columns: 1fr !important; }
   .layer-grid { grid-template-columns: 1fr !important; }
+
+  /* LLM animations & layout mobile fixes */
+  .nn-container { height: 180px !important; margin: 10px 0 !important; transform: scale(0.85); transform-origin: top center; }
+  .embed-space { height: 220px !important; }
+  .loop-container { height: 240px !important; transform: scale(0.8); transform-origin: top center; }
+  .attention-scene { min-height: 150px !important; padding: 12px !important; }
+  .att-word { padding: 6px 10px !important; margin: 0 3px !important; font-size: 16px !important; }
+  .att-words-row { margin-bottom: 50px !important; }
+  .prob-label { width: 70px !important; font-size: 12px !important; }
+  .prob-track { height: 22px !important; }
+  .prob-fill { font-size: 11px !important; }
+  .token { padding: 5px 8px !important; font-size: 13px !important; }
+  .typewriter-container { font-size: 16px !important; padding: 14px !important; }
+  .training-stage { padding: 12px !important; gap: 10px !important; }
+  .stage-icon { font-size: 28px !important; }
+  .stage-name { font-size: 15px !important; }
+  .stage-desc { font-size: 12px !important; }
+  .temp-card { padding: 14px !important; }
+  .temp-icon { font-size: 30px !important; }
+  .temp-title { font-size: 16px !important; }
+  .temp-val { font-size: 12px !important; }
+  .flex-row { gap: 10px !important; }
+  .flex-row > * { min-width: 140px !important; }
+  .card { padding: 16px !important; margin-bottom: 12px !important; }
+  .card-title { font-size: 15px !important; }
+  .recap-item { padding: 8px 0 !important; }
+  .recap-text { font-size: 13px !important; }
+  .emoji-big { font-size: 32px !important; margin-bottom: 8px !important; }
 
   /* ─── System Design specific ─── */
   .sd-grid { grid-template-columns: 1fr !important; }
