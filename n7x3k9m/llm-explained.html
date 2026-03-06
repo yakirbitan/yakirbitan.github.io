@@ -193,7 +193,7 @@
   .embed-dot.action { background: rgba(96,165,250,0.2); color: var(--blue); border: 1px solid var(--blue); }
 
   /* ─── Neural network ─── */
-  .nn-container { position: relative; height: 250px; margin: 16px 0; }
+  .nn-container { position: relative; height: 250px; margin: 16px 0; overflow: hidden; }
   .neuron {
     position: absolute; width: 28px; height: 28px; border-radius: 50%;
     background: var(--surface2); border: 2px solid var(--muted);
@@ -930,29 +930,38 @@
     const container = document.getElementById('nnContainer');
     container.innerHTML = '';
 
+    const cw = container.offsetWidth || 600;
+    const ch = container.offsetHeight - 30 || 220;
     const layers = [4, 8, 12, 8, 4];
-    const layerX = [60, 200, 370, 540, 700];
-    const spacing = [50, 28, 20, 28, 50];
     const colors = ['var(--blue)', 'var(--purple)', 'var(--orange)', 'var(--purple)', 'var(--green)'];
+    const neuronSize = Math.min(28, cw / 30);
+    const half = neuronSize / 2;
 
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.classList.add('nn-svg');
-    svg.setAttribute('viewBox', '0 0 780 250');
+    svg.setAttribute('viewBox', '0 0 ' + cw + ' ' + ch);
     container.appendChild(svg);
+
+    const pad = cw * 0.08;
+    const usableW = cw - pad * 2;
 
     const positions = [];
     layers.forEach((count, li) => {
       const pos = [];
-      const startY = (250 - count * spacing[li]) / 2;
+      const x = pad + (usableW / (layers.length - 1)) * li;
+      const maxSpacing = (ch - 20) / count;
+      const sp = Math.min(maxSpacing, ch / (count + 1));
+      const startY = (ch - (count - 1) * sp) / 2;
       for (let ni = 0; ni < count; ni++) {
-        const x = layerX[li];
-        const y = startY + ni * spacing[li];
-        pos.push({x: x + 14, y: y + 14});
+        const y = startY + ni * sp;
+        pos.push({x: x, y: y});
 
         const neuron = document.createElement('div');
         neuron.className = 'neuron';
-        neuron.style.left = x + 'px';
-        neuron.style.top = y + 'px';
+        neuron.style.width = neuronSize + 'px';
+        neuron.style.height = neuronSize + 'px';
+        neuron.style.left = (x - half) + 'px';
+        neuron.style.top = (y - half) + 'px';
         neuron.style.borderColor = colors[li];
         neuron.dataset.layer = li;
         neuron.dataset.index = ni;
@@ -978,9 +987,14 @@
     }
 
     // Labels
+    const isMobile = window.innerWidth <= 500;
     const labelDiv = document.createElement('div');
-    labelDiv.style.cssText = 'position:absolute; bottom:0; width:100%; display:flex; justify-content:space-around; font-size:12px; color:var(--muted); padding:0 30px;';
-    labelDiv.innerHTML = '<span style="color:var(--blue)">Input (4096)</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--orange)">Hidden (16K neurons)</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--green)">Output (4096)</span>';
+    labelDiv.style.cssText = 'position:absolute; bottom:0; width:100%; display:flex; justify-content:space-around; font-size:' + (isMobile ? '9px' : '12px') + '; color:var(--muted); padding:0 ' + (isMobile ? '4px' : '30px') + ';';
+    if (isMobile) {
+      labelDiv.innerHTML = '<span style="color:var(--blue)">Input</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--orange)">16K</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--green)">Output</span>';
+    } else {
+      labelDiv.innerHTML = '<span style="color:var(--blue)">Input (4096)</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--orange)">Hidden (16K neurons)</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--green)">Output (4096)</span>';
+    }
     container.appendChild(labelDiv);
 
     // Animate firing

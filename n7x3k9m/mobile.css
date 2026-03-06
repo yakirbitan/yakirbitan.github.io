@@ -152,6 +152,19 @@
   .tier-rainbow { gap: 6px !important; }
   .tr-item { padding: 5px 10px !important; font-size: 11px !important; }
 
+  /* ─── LeetCode cheat sheet table (inline styled) ─── */
+  .slide table[style*="border-collapse"] { font-size: 11px !important; }
+  .slide table[style*="border-collapse"] th { padding: 5px 5px !important; font-size: 10px !important; }
+  .slide table[style*="border-collapse"] td { padding: 4px 5px !important; font-size: 10px !important; }
+  .slide table[style*="border-collapse"] th:nth-child(3),
+  .slide table[style*="border-collapse"] td:nth-child(3) { display: none; }
+
+  /* ─── LLM autoregressive loop step separators ─── */
+  #loopSteps > div { border-bottom: 1px solid rgba(148,163,184,0.15); padding-bottom: 8px !important; margin-bottom: 4px; }
+  #loopSteps > div:last-child { border-bottom: none; }
+  #loopAnimContainer { padding: 14px !important; }
+  #loopSteps { font-size: 12px !important; line-height: 1.8 !important; }
+
   /* ─── Cloud tables (IaaS/PaaS/SaaS, Rosetta Stone) ─── */
   .compare-table { font-size: 11px !important; }
   .compare-table th { padding: 6px 6px !important; font-size: 11px !important; }
@@ -173,7 +186,7 @@
   .layer-grid { grid-template-columns: 1fr !important; }
 
   /* LLM animations & layout mobile fixes */
-  .nn-container { height: 180px !important; margin: 10px 0 !important; transform: scale(0.85); transform-origin: top center; }
+  .nn-container { height: 200px !important; margin: 10px 0 !important; }
   .embed-space { height: 220px !important; }
   .loop-container { height: 240px !important; transform: scale(0.8); transform-origin: top center; }
   .attention-scene { min-height: 150px !important; padding: 12px !important; }
