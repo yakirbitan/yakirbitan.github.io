@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LeetCode Patterns — From 0 to 100 — All Patterns Animated</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --green: #34d399;
+  --orange: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --cyan: #22d3ee;
+  --lime: #a3e635;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+
+/* ─── Top Bar ─── */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(15,23,42,0.95); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--surface2); padding:10px 24px;
+  display:flex; align-items:center; gap:16px;
+}
+.topbar h1 { font-size:15px; color:var(--cyan); white-space:nowrap; }
+.progress-track { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--cyan),var(--blue),var(--purple),var(--pink)); border-radius:3px; transition:width 0.5s ease; }
+.step-counter { font-size:14px; color:var(--muted); white-space:nowrap; }
+
+/* ─── Controls ─── */
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  background:rgba(15,23,42,0.95); backdrop-filter:blur(10px);
+  border-top:1px solid var(--surface2); padding:12px 24px;
+  display:flex; align-items:center; justify-content:center; gap:16px;
+}
+.btn { padding:8px 24px; border:none; border-radius:8px; font-size:15px; cursor:pointer; transition:all 0.2s; font-weight:600; }
+.btn-primary { background:var(--cyan); color:var(--bg); }
+.btn-primary:hover { background:#67e8f9; transform:translateY(-1px); }
+.btn-secondary { background:var(--surface2); color:var(--text); }
+.btn-secondary:hover { background:#475569; }
+.btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+.key-hint { font-size:12px; color:var(--muted); }
+
+/* ─── Slides ─── */
+.slides-wrapper {
+  position:fixed; top:82px; bottom:56px; left:0; right:0; overflow-y:auto; overflow-x:hidden;
+}
+.slides-wrapper::-webkit-scrollbar { width:6px; }
+.slides-wrapper::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:3px; }
+.slide {
+  position:absolute; inset:0;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:24px 36px;
+  opacity:0; transform:translateX(60px);
+  transition:opacity 0.5s, transform 0.5s;
+  pointer-events:none; overflow-y:auto;
+}
+.slide.active { opacity:1; transform:translateX(0); pointer-events:auto; }
+.slide.exit-left { opacity:0; transform:translateX(-60px); }
+.slide-inner { max-width:1150px; width:100%; padding-bottom:40px; }
+
+.slide-title {
+  font-size:30px; font-weight:700; margin-bottom:6px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.slide-subtitle { font-size:16px; color:var(--muted); margin-bottom:22px; }
+.invariant { font-size:13px; color:var(--orange); background:rgba(255,165,0,0.08); border-left:3px solid var(--orange); padding:6px 12px; border-radius:6px; margin-bottom:16px; font-style:italic; }
+
+.card { background:var(--surface); border-radius:12px; padding:18px; border:1px solid var(--surface2); margin-bottom:12px; }
+.card-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.flex-row { display:flex; gap:12px; flex-wrap:wrap; }
+.flex-row > * { flex:1; min-width:240px; }
+
+/* ─── Animations ─── */
+@keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeInLeft { from{opacity:0;transform:translateX(-30px)} to{opacity:1;transform:translateX(0)} }
+@keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+@keyframes slideRight { from{width:0} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes highlight { 0%{background:transparent} 50%{background:rgba(34,211,238,0.2)} 100%{background:transparent} }
+@keyframes pointerMove { 0%{left:0} 100%{left:var(--end)} }
+@keyframes scaleIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+
+.anim-item { opacity:0; }
+.slide.active .anim-item { animation:fadeInUp 0.6s ease forwards; }
+.slide.active .anim-item:nth-child(2) { animation-delay:0.12s }
+.slide.active .anim-item:nth-child(3) { animation-delay:0.24s }
+.slide.active .anim-item:nth-child(4) { animation-delay:0.36s }
+.slide.active .anim-item:nth-child(5) { animation-delay:0.48s }
+.slide.active .anim-item:nth-child(6) { animation-delay:0.6s }
+.slide.active .anim-item:nth-child(7) { animation-delay:0.72s }
+.slide.active .anim-item:nth-child(8) { animation-delay:0.84s }
+.slide.active .anim-item:nth-child(9) { animation-delay:0.96s }
+.slide.active .anim-item:nth-child(10) { animation-delay:1.08s }
+
+/* ─── Array visuals ─── */
+.arr { display:inline-flex; gap:2px; font-family:'Fira Code',monospace; }
+.arr-cell {
+  width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+  background:var(--surface2); border-radius:6px; font-size:15px; font-weight:700;
+  border:2px solid transparent; transition:all 0.3s;
+}
+.arr-cell.hi { border-color:var(--cyan); background:rgba(34,211,238,0.15); color:var(--cyan); }
+.arr-cell.hi2 { border-color:var(--purple); background:rgba(167,139,250,0.15); color:var(--purple); }
+.arr-cell.hi3 { border-color:var(--green); background:rgba(52,211,153,0.15); color:var(--green); }
+.arr-cell.hi4 { border-color:var(--orange); background:rgba(251,191,36,0.15); color:var(--orange); }
+.arr-cell.hi5 { border-color:var(--pink); background:rgba(244,114,182,0.15); color:var(--pink); }
+.arr-cell.dim { opacity:0.3; }
+
+/* ─── Pointer labels ─── */
+.ptr { font-size:11px; font-weight:700; text-align:center; margin-top:2px; }
+.ptr-cyan { color:var(--cyan); }
+.ptr-purple { color:var(--purple); }
+.ptr-green { color:var(--green); }
+.ptr-orange { color:var(--orange); }
+
+/* ─── Tree nodes ─── */
+.tree-node {
+  width:38px; height:38px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:15px; border:2px solid var(--surface2); background:var(--surface); transition:all 0.3s;
+}
+.tree-node.hi { border-color:var(--cyan); background:rgba(34,211,238,0.15); color:var(--cyan); }
+.tree-node.hi2 { border-color:var(--green); background:rgba(52,211,153,0.15); color:var(--green); }
+
+/* ─── Code blocks ─── */
+.code-block {
+  background:var(--bg); border:1px solid var(--surface2); border-radius:8px;
+  padding:14px; font-family:'Fira Code',monospace; font-size:13px; line-height:1.7;
+  overflow-x:auto; color:var(--green); white-space:pre;
+}
+.kw { color:var(--purple); }
+.fn { color:var(--blue); }
+.cm { color:var(--muted); }
+.st { color:var(--orange); }
+.num { color:var(--cyan); }
+
+/* ─── Complexity badges ─── */
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; }
+.badge-green { background:rgba(52,211,153,0.2); color:var(--green); }
+.badge-orange { background:rgba(251,191,36,0.2); color:var(--orange); }
+.badge-red { background:rgba(248,113,113,0.2); color:var(--red); }
+
+/* ─── Key idea box ─── */
+.key-idea {
+  background:rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.3);
+  border-radius:10px; padding:14px 16px; margin-top:10px; margin-bottom:10px;
+  font-size:15px; line-height:1.6;
+}
+.key-idea strong { color:var(--cyan); }
+
+/* ─── Problem tags ─── */
+.prob-tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; background:var(--surface2); color:var(--muted); margin:2px; }
+
+/* dot grid bg */
+.slides-wrapper::before {
+  content:''; position:fixed; top:46px; bottom:56px; left:0; right:0;
+  background-image:radial-gradient(circle,var(--surface2) 1px,transparent 1px);
+  background-size:30px 30px; opacity:0.3; pointer-events:none; z-index:0;
+}
+.slide { z-index:1; }
+
+/* Graph */
+.graph-edge { stroke:var(--surface2); stroke-width:2; }
+.graph-node { fill:var(--surface); stroke:var(--cyan); stroke-width:2; }
+.graph-node-hi { fill:rgba(34,211,238,0.2); stroke:var(--cyan); stroke-width:2; }
+.graph-text { fill:var(--text); font-size:13px; font-weight:700; text-anchor:middle; dominant-baseline:central; }
+
+/* difficulty */
+.diff-easy { color:var(--green); }
+.diff-med { color:var(--orange); }
+.diff-hard { color:var(--red); }
+
+/* ─── Guide Nav Bar ─── */
+.guide-nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:rgba(15,23,42,0.98); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--surface2); padding:6px 16px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.guide-nav a {
+  padding:5px 14px; border-radius:6px; font-size:12px; font-weight:600;
+  text-decoration:none; color:var(--muted); transition:all 0.2s;
+  border:1px solid transparent; white-space:nowrap;
+}
+.guide-nav a:hover { color:var(--text); background:var(--surface2); }
+.guide-nav a.active { color:var(--cyan); border-color:var(--cyan); background:rgba(34,211,238,0.1); }
+.guide-nav .home-btn { color:var(--text); font-size:14px; margin-right:8px; }
+.guide-nav .home-btn:hover { color:var(--cyan); }
+.slide-jump { padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; background:var(--surface2); color:var(--text); border:1px solid var(--surface2); cursor:pointer; outline:none; }
+.slide-jump:hover, .slide-jump:focus { border-color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="guide-nav">
+  <a href="index.html" class="home-btn" title="Home">🏠</a>
+  <a href="learning-tiers.html">Learning Tiers</a>
+  <a href="leetcode-patterns.html" class="active">LeetCode Patterns</a>
+  <a href="system-design.html">System Design</a>
+  <a href="cloud-explained.html">Cloud Computing</a>
+  <a href="llm-explained.html">How LLMs Work</a>
+</div>
+
+<div class="topbar" style="top:36px;">
+  <h1>🧠 LeetCode Patterns 0→100</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="step-counter" id="stepCounter">1 / 20</span>
+</div>
+<div class="controls">
+  <button class="btn btn-secondary" id="btnPrev" onclick="prevSlide()">← Back</button>
+  <select class="slide-jump" id="slideJump" onchange="goToSlide(parseInt(this.value))"></select>
+  <span class="key-hint">← → keys</span>
+  <button class="btn btn-primary" id="btnNext" onclick="nextSlide()">Next →</button>
+</div>
+
+<div class="slides-wrapper">
+
+<!-- ══════════════════════════════════════ SLIDE 0 — TITLE ══════════════════════════════════════ -->
+<div class="slide active" data-slide="0">
+<div class="slide-inner" style="text-align:center; padding-top:40px;">
+  <div class="anim-item" style="font-size:56px;">🧠</div>
+  <h1 class="anim-item slide-title" style="font-size:42px;">Every LeetCode Pattern<br>From 0 to 100</h1>
+  <p class="anim-item slide-subtitle" style="font-size:18px;">Master 20 patterns → Solve 95% of FAANG interview problems</p>
+  <div class="anim-item" style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px;">
+    <span class="badge badge-green" style="font-size:14px; padding:6px 14px;">Easy: ~5 min</span>
+    <span class="badge badge-orange" style="font-size:14px; padding:6px 14px;">Medium: ~10 min</span>
+    <span class="badge badge-red" style="font-size:14px; padding:6px 14px;">Hard: ~15 min</span>
+  </div>
+  <div class="anim-item" style="margin-top:30px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; max-width:800px; margin-left:auto; margin-right:auto;">
+    <span class="prob-tag" style="font-size:13px;">Two Pointers</span>
+    <span class="prob-tag" style="font-size:13px;">Sliding Window</span>
+    <span class="prob-tag" style="font-size:13px;">Binary Search</span>
+    <span class="prob-tag" style="font-size:13px;">BFS/DFS</span>
+    <span class="prob-tag" style="font-size:13px;">Backtracking</span>
+    <span class="prob-tag" style="font-size:13px;">Dynamic Programming</span>
+    <span class="prob-tag" style="font-size:13px;">Greedy</span>
+    <span class="prob-tag" style="font-size:13px;">Graphs</span>
+    <span class="prob-tag" style="font-size:13px;">Trees</span>
+    <span class="prob-tag" style="font-size:13px;">Heap/Priority Queue</span>
+    <span class="prob-tag" style="font-size:13px;">Stack/Monotonic Stack</span>
+    <span class="prob-tag" style="font-size:13px;">Trie</span>
+    <span class="prob-tag" style="font-size:13px;">Union Find</span>
+    <span class="prob-tag" style="font-size:13px;">Intervals</span>
+    <span class="prob-tag" style="font-size:13px;">Linked Lists</span>
+    <span class="prob-tag" style="font-size:13px;">Bit Manipulation</span>
+    <span class="prob-tag" style="font-size:13px;">Topological Sort</span>
+    <span class="prob-tag" style="font-size:13px;">Prefix Sum</span>
+  </div>
+  <p class="anim-item" style="margin-top:24px; color:var(--muted);">Press <strong>Next →</strong> or <strong>→</strong> to begin</p>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 1 — THE META-STRATEGY ══════════════════════════════════════ -->
+<div class="slide" data-slide="1">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Slide 0: The Meta-Strategy 🎯</div>
+  <div class="anim-item slide-subtitle">Before any pattern — the framework for solving ANY problem in 10-15 min</div>
+
+  <div class="anim-item key-idea">
+    <strong>🧠 The #1 insight:</strong> There are only ~20 patterns. Every LeetCode problem is a <em>skin</em> on top of one or two of these patterns. Recognize the pattern → apply the template → done.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div class="card-title" style="color:var(--cyan);">The 4-Step Interview Framework (use for EVERY problem):</div>
+    <div style="font-size:14px; line-height:2;">
+      <p><strong style="color:var(--orange);">1. CLARIFY</strong> (1-2 min) — Inputs? Outputs? Edge cases? Constraints? Sorted? Duplicates? Negative numbers? Can I modify input?</p>
+      <p><strong style="color:var(--green);">2. IDENTIFY PATTERN</strong> (1-2 min) — What pattern does this match? (use the cheat sheet on the last slide)</p>
+      <p><strong style="color:var(--blue);">3. CODE</strong> (5-8 min) — Write the solution using the pattern template. Talk through your logic.</p>
+      <p><strong style="color:var(--purple);">4. TEST</strong> (2-3 min) — Dry-run with a small example. Check edge cases. State time/space complexity.</p>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--orange);">
+    <div class="card-title" style="color:var(--orange);">How to identify the pattern (decision tree):</div>
+    <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+      <p>• Input is a <strong style="color:var(--text);">sorted array</strong>? → <strong style="color:var(--cyan);">Binary Search</strong> or <strong style="color:var(--cyan);">Two Pointers</strong></p>
+      <p>• Need a <strong style="color:var(--text);">contiguous subarray</strong>? → <strong style="color:var(--cyan);">Sliding Window</strong> or <strong style="color:var(--cyan);">Prefix Sum</strong></p>
+      <p>• Input is a <strong style="color:var(--text);">tree or graph</strong>? → <strong style="color:var(--cyan);">BFS/DFS</strong></p>
+      <p>• Need <strong style="color:var(--text);">all combinations/permutations</strong>? → <strong style="color:var(--cyan);">Backtracking</strong></p>
+      <p>• Problem says <strong style="color:var(--text);">"minimum/maximum" + "choices at each step"</strong>? → <strong style="color:var(--cyan);">DP</strong> or <strong style="color:var(--cyan);">Greedy</strong></p>
+      <p>• Need <strong style="color:var(--text);">top K / kth largest</strong>? → <strong style="color:var(--cyan);">Heap</strong></p>
+      <p>• Need <strong style="color:var(--text);">next greater/smaller element</strong>? → <strong style="color:var(--cyan);">Monotonic Stack</strong></p>
+      <p>• Need to <strong style="color:var(--text);">group connected components</strong>? → <strong style="color:var(--cyan);">Union-Find</strong> or <strong style="color:var(--cyan);">BFS/DFS</strong></p>
+      <p>• Input has <strong style="color:var(--text);">intervals/ranges</strong>? → <strong style="color:var(--cyan);">Sort + Merge/Sweep</strong></p>
+      <p>• Need <strong style="color:var(--text);">ordering with dependencies</strong>? → <strong style="color:var(--cyan);">Topological Sort</strong></p>
+      <p>• Need <strong style="color:var(--text);">prefix lookups or autocomplete</strong>? → <strong style="color:var(--cyan);">Trie</strong></p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 2 — TWO POINTERS ══════════════════════════════════════ -->
+<div class="slide" data-slide="2">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 1: Two Pointers 👈👉</div>
+  <div class="anim-item slide-subtitle">Use two index variables to scan from different ends or at different speeds</div>
+  <div class="anim-item invariant">🔒 Invariant: Everything outside [L, R] has been eliminated — the answer must lie between the pointers.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Instead of brute-force O(n²) nested loops, use two pointers that move towards each other (or same direction at different speeds). Each pointer visits each element at most once → O(n).
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div class="card-title" style="color:var(--cyan);">Variant 1: Opposite-direction (sorted array)</div>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:10px;">Problem: Two Sum II (sorted array) — find two numbers that add to target=9</p>
+    <div style="text-align:center; margin:10px 0;">
+      <div class="arr" id="tpArr1">
+        <div><div class="arr-cell hi">1</div><div class="ptr ptr-cyan">L</div></div>
+        <div><div class="arr-cell">3</div><div class="ptr">&nbsp;</div></div>
+        <div><div class="arr-cell">4</div><div class="ptr">&nbsp;</div></div>
+        <div><div class="arr-cell">5</div><div class="ptr">&nbsp;</div></div>
+        <div><div class="arr-cell">7</div><div class="ptr">&nbsp;</div></div>
+        <div><div class="arr-cell">10</div><div class="ptr">&nbsp;</div></div>
+        <div><div class="arr-cell hi2">11</div><div class="ptr ptr-purple">R</div></div>
+      </div>
+    </div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">two_sum</span>(nums, target):
+    L, R = <span class="num">0</span>, len(nums) - <span class="num">1</span>
+    <span class="kw">while</span> L < R:
+        s = nums[L] + nums[R]
+        <span class="kw">if</span> s == target: <span class="kw">return</span> [L, R]
+        <span class="kw">elif</span> s < target: L += <span class="num">1</span>   <span class="cm"># sum too small → move left pointer right</span>
+        <span class="kw">else</span>: R -= <span class="num">1</span>              <span class="cm"># sum too big → move right pointer left</span></div>
+    <p style="font-size:13px; color:var(--muted); margin-top:6px;"><strong>Why it works:</strong> Array is sorted. If sum < target, moving L right increases sum. If sum > target, moving R left decreases sum. We eliminate one element each step.</p>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">Variant 2: Same-direction (fast & slow)</div>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:6px;">Problem: Remove duplicates from sorted array in-place</p>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">remove_duplicates</span>(nums):
+    slow = <span class="num">0</span>
+    <span class="kw">for</span> fast <span class="kw">in</span> range(len(nums)):
+        <span class="kw">if</span> nums[fast] != nums[slow]:
+            slow += <span class="num">1</span>
+            nums[slow] = nums[fast]
+    <span class="kw">return</span> slow + <span class="num">1</span></div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <strong style="color:var(--text);">Classic problems:</strong>
+    <span class="prob-tag">Two Sum II</span><span class="prob-tag">3Sum</span><span class="prob-tag">Container With Most Water</span><span class="prob-tag">Trapping Rain Water</span><span class="prob-tag">Remove Duplicates</span><span class="prob-tag">Valid Palindrome</span><span class="prob-tag">Sort Colors (Dutch Flag)</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-green">Time: O(n)</span> <span class="badge badge-green">Space: O(1)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 3 — SLIDING WINDOW ══════════════════════════════════════ -->
+<div class="slide" data-slide="3">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 2: Sliding Window 🪟</div>
+  <div class="anim-item slide-subtitle">Maintain a "window" over a contiguous subarray/substring, expand & shrink it</div>
+  <div class="anim-item invariant">🔒 Invariant: The window [L, R] always bounds a valid candidate — when the constraint breaks, shrink from left until it holds again.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> When you need the "best contiguous subarray/substring" (max sum, min length, at most K distinct...), don't re-check from scratch each time. Slide a window: expand right to include more, shrink left when constraint is violated. Each element enters and leaves the window once → O(n).
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--green);">
+    <div class="card-title" style="color:var(--green);">Fixed-size Window — Max sum of subarray of size K=3</div>
+    <div style="text-align:center; margin:10px 0;">
+      <div class="arr">
+        <div><div class="arr-cell dim">2</div></div>
+        <div><div class="arr-cell hi3">1</div></div>
+        <div><div class="arr-cell hi3">5</div></div>
+        <div><div class="arr-cell hi3">1</div></div>
+        <div><div class="arr-cell dim">3</div></div>
+        <div><div class="arr-cell dim">2</div></div>
+      </div>
+      <div style="margin-top:4px; font-size:13px;">
+        <span style="color:var(--muted);">window = [</span><span style="color:var(--green);">1, 5, 1</span><span style="color:var(--muted);">] → sum = 7</span>
+        <span style="color:var(--green); margin-left:10px;">slide →</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div class="card-title" style="color:var(--cyan);">Variable-size Window — Longest substring with at most K distinct chars</div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">longest_k_distinct</span>(s, k):
+    window = {}  <span class="cm"># char → count</span>
+    left = result = <span class="num">0</span>
+    <span class="kw">for</span> right <span class="kw">in</span> range(len(s)):
+        window[s[right]] = window.get(s[right], <span class="num">0</span>) + <span class="num">1</span>
+        <span class="kw">while</span> len(window) > k:       <span class="cm"># constraint violated!</span>
+            window[s[left]] -= <span class="num">1</span>       <span class="cm"># shrink from left</span>
+            <span class="kw">if</span> window[s[left]] == <span class="num">0</span>:
+                <span class="kw">del</span> window[s[left]]
+            left += <span class="num">1</span>
+        result = max(result, right - left + <span class="num">1</span>)
+    <span class="kw">return</span> result</div>
+    <p style="font-size:13px; color:var(--muted); margin-top:6px;"><strong>Template:</strong> Expand right → check constraint → if violated, shrink left until valid → update answer.</p>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <strong style="color:var(--text);">Classic problems:</strong>
+    <span class="prob-tag">Max Sum Subarray Size K</span><span class="prob-tag">Longest Substring Without Repeats</span><span class="prob-tag">Minimum Window Substring</span><span class="prob-tag">Permutation in String</span><span class="prob-tag">Fruits Into Baskets</span><span class="prob-tag">Longest Repeating Char Replacement</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-green">Time: O(n)</span> <span class="badge badge-green">Space: O(k)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 4 — BINARY SEARCH ══════════════════════════════════════ -->
+<div class="slide" data-slide="4">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 3: Binary Search 🔍</div>
+  <div class="anim-item slide-subtitle">Cut the search space in half each step — O(log n) power</div>
+  <div class="anim-item invariant">🔒 Invariant: The answer always exists within [lo, hi] — each comparison halves the range while preserving this guarantee.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Whenever you have a <em>monotonic condition</em> (sorted array, or a yes/no boundary), you can binary search. The hard part isn't basic binary search — it's recognizing you CAN binary search on the <em>answer space</em> itself (e.g., "what's the minimum capacity to ship packages in D days?" → binary search on capacity).
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--orange);">
+    <div class="card-title" style="color:var(--orange);">Classic Binary Search — find target in sorted array</div>
+    <div style="text-align:center; margin:8px 0;">
+      <div class="arr">
+        <div><div class="arr-cell dim">1</div></div>
+        <div><div class="arr-cell dim">3</div></div>
+        <div><div class="arr-cell dim">5</div></div>
+        <div><div class="arr-cell hi4">7</div><div class="ptr ptr-orange">mid</div></div>
+        <div><div class="arr-cell">9</div></div>
+        <div><div class="arr-cell">11</div></div>
+        <div><div class="arr-cell">13</div></div>
+      </div>
+      <div style="font-size:13px; color:var(--muted); margin-top:4px;">target=9 > mid=7 → search right half</div>
+    </div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">binary_search</span>(nums, target):
+    lo, hi = <span class="num">0</span>, len(nums) - <span class="num">1</span>
+    <span class="kw">while</span> lo <= hi:
+        mid = (lo + hi) // <span class="num">2</span>
+        <span class="kw">if</span> nums[mid] == target: <span class="kw">return</span> mid
+        <span class="kw">elif</span> nums[mid] < target: lo = mid + <span class="num">1</span>
+        <span class="kw">else</span>: hi = mid - <span class="num">1</span>
+    <span class="kw">return</span> -<span class="num">1</span></div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--red);">
+    <div class="card-title" style="color:var(--red);">🔥 Advanced: Binary Search on Answer (THE interview trick)</div>
+    <p style="font-size:14px; color:var(--muted);">"Can I ship all packages in D days with capacity X?" → If YES for X=10, also YES for X=11,12,... → monotonic! Binary search on X.</p>
+    <div class="code-block"><span class="cm"># "What is the minimum eating speed to finish all bananas in H hours?"</span>
+<span class="kw">def</span> <span class="fn">minEatingSpeed</span>(piles, h):
+    lo, hi = <span class="num">1</span>, max(piles)
+    <span class="kw">while</span> lo < hi:
+        mid = (lo + hi) // <span class="num">2</span>
+        <span class="kw">if</span> <span class="fn">canFinish</span>(piles, h, mid):  <span class="cm"># can eat all at speed=mid?</span>
+            hi = mid              <span class="cm"># yes → try slower</span>
+        <span class="kw">else</span>:
+            lo = mid + <span class="num">1</span>          <span class="cm"># no → need faster</span>
+    <span class="kw">return</span> lo</div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <strong style="color:var(--text);">Classic problems:</strong>
+    <span class="prob-tag">Search Rotated Array</span><span class="prob-tag">Find Min Rotated</span><span class="prob-tag">Koko Eating Bananas</span><span class="prob-tag">Capacity To Ship Packages</span><span class="prob-tag">Search 2D Matrix</span><span class="prob-tag">Median of Two Sorted Arrays</span><span class="prob-tag">Split Array Largest Sum</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-green">Time: O(log n)</span> <span class="badge badge-green">Space: O(1)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 5 — PREFIX SUM ══════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 4: Prefix Sum ➕</div>
+  <div class="anim-item slide-subtitle">Precompute cumulative sums to answer any range-sum query in O(1)</div>
+  <div class="anim-item invariant">🔒 Invariant: prefix[i] always equals the exact sum of elements [0..i-1] — any subarray sum is just prefix[R+1] − prefix[L].</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Build a prefix[] array where prefix[i] = sum of elements from 0 to i-1. Then sum(L..R) = prefix[R+1] − prefix[L]. Any subarray sum becomes a single subtraction. Combine with a HashMap to find "subarray with sum = K" in O(n).
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--blue);">
+    <div class="card-title" style="color:var(--blue);">Visual: prefix sum array</div>
+    <div style="text-align:center; margin:10px 0;">
+      <div style="font-size:13px; color:var(--muted); margin-bottom:6px;">Original:&nbsp;</div>
+      <div class="arr">
+        <div><div class="arr-cell">2</div></div>
+        <div><div class="arr-cell hi">4</div></div>
+        <div><div class="arr-cell hi">6</div></div>
+        <div><div class="arr-cell hi">1</div></div>
+        <div><div class="arr-cell">3</div></div>
+      </div>
+      <div style="font-size:13px; color:var(--muted); margin-top:10px; margin-bottom:6px;">Prefix:&nbsp;&nbsp;</div>
+      <div class="arr">
+        <div><div class="arr-cell" style="background:var(--bg);">0</div></div>
+        <div><div class="arr-cell" style="background:var(--bg);">2</div></div>
+        <div><div class="arr-cell hi" style="border-style:dashed;">6</div></div>
+        <div><div class="arr-cell" style="background:var(--bg);">12</div></div>
+        <div><div class="arr-cell hi" style="border-style:dashed;">13</div></div>
+        <div><div class="arr-cell" style="background:var(--bg);">16</div></div>
+      </div>
+      <div style="font-size:13px; margin-top:6px;">sum([4,6,1]) = prefix[4] − prefix[1] = <span style="color:var(--cyan);">13 − 2 = 11</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">Subarray Sum Equals K (HashMap trick)</div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">subarraySum</span>(nums, k):
+    count = <span class="num">0</span>
+    prefix = <span class="num">0</span>
+    seen = {<span class="num">0</span>: <span class="num">1</span>}  <span class="cm"># prefix_sum → how many times we've seen it</span>
+    <span class="kw">for</span> num <span class="kw">in</span> nums:
+        prefix += num
+        <span class="cm"># if (prefix - k) was seen before → there's a subarray summing to k</span>
+        count += seen.get(prefix - k, <span class="num">0</span>)
+        seen[prefix] = seen.get(prefix, <span class="num">0</span>) + <span class="num">1</span>
+    <span class="kw">return</span> count</div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Subarray Sum Equals K</span><span class="prob-tag">Range Sum Query</span><span class="prob-tag">Product of Array Except Self</span><span class="prob-tag">Continuous Subarray Sum</span><span class="prob-tag">2D Prefix Sum</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-green">Time: O(n)</span> <span class="badge badge-green">Space: O(n)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 6 — HASH MAP ══════════════════════════════════════ -->
+<div class="slide" data-slide="6">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 5: HashMap / HashSet 🗂️</div>
+  <div class="anim-item slide-subtitle">Trade space for time — O(1) lookups turn O(n²) into O(n)</div>
+  <div class="anim-item invariant">🔒 Invariant: The map always contains every element seen so far — enabling O(1) lookup of complements or duplicates at each step.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Whenever you're doing "for each element, search for something" — put things in a HashMap. The classic: Two Sum. Instead of checking all pairs O(n²), store seen values in a map and check "does complement exist?" in O(1) each step.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Two Sum (THE most common interview Q)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">twoSum</span>(nums, target):
+    seen = {}  <span class="cm"># value → index</span>
+    <span class="kw">for</span> i, num <span class="kw">in</span> enumerate(nums):
+        complement = target - num
+        <span class="kw">if</span> complement <span class="kw">in</span> seen:
+            <span class="kw">return</span> [seen[complement], i]
+        seen[num] = i</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">When to use HashMap vs HashSet</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">HashMap</strong> {key→value}: when you need to STORE info (index, count, mapping)</p>
+        <p><strong style="color:var(--green);">HashSet</strong> {key}: when you just need to check EXISTENCE (seen before? duplicate? cycle?)</p>
+        <p style="margin-top:6px;"><strong style="color:var(--orange);">Frequency Map</strong> = HashMap where value = count. Used in anagram problems, sliding window char counts.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Two Sum</span><span class="prob-tag">Group Anagrams</span><span class="prob-tag">Top K Frequent Elements</span><span class="prob-tag">Contains Duplicate</span><span class="prob-tag">Longest Consecutive Sequence</span><span class="prob-tag">Valid Anagram</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-green">Time: O(n)</span> <span class="badge badge-green">Space: O(n)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 7 — STACK & MONOTONIC STACK ══════════════════════════════════════ -->
+<div class="slide" data-slide="7">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 6: Stack & Monotonic Stack 📚</div>
+  <div class="anim-item slide-subtitle">LIFO for matching pairs, and monotonic stack for "next greater/smaller"</div>
+  <div class="anim-item invariant">🔒 Invariant: The stack maintains monotonic order — any element that breaks it is immediately processed and popped.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea — Regular Stack:</strong> Whenever you see <em>matching/nesting</em> (parentheses, HTML tags, undo operations), use a stack. Push opening, pop on closing.<br>
+    <strong>💡 Key idea — Monotonic Stack:</strong> To find the "next greater element" for every position in O(n), maintain a stack that's always sorted (decreasing or increasing). When a new element breaks monotonicity, pop and record answers.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Valid Parentheses (basic stack)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">isValid</span>(s):
+    stack = []
+    pairs = {<span class="st">')'</span>:<span class="st">'('</span>, <span class="st">']'</span>:<span class="st">'['</span>, <span class="st">'}'</span>:<span class="st">'{'</span>}
+    <span class="kw">for</span> c <span class="kw">in</span> s:
+        <span class="kw">if</span> c <span class="kw">in</span> pairs:
+            <span class="kw">if not</span> stack <span class="kw">or</span> stack[-<span class="num">1</span>] != pairs[c]:
+                <span class="kw">return False</span>
+            stack.pop()
+        <span class="kw">else</span>:
+            stack.append(c)
+    <span class="kw">return not</span> stack</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">🔥 Next Greater Element (monotonic stack)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">nextGreater</span>(nums):
+    result = [-<span class="num">1</span>] * len(nums)
+    stack = []  <span class="cm"># indices, decreasing order</span>
+    <span class="kw">for</span> i, num <span class="kw">in</span> enumerate(nums):
+        <span class="kw">while</span> stack <span class="kw">and</span> nums[stack[-<span class="num">1</span>]] < num:
+            result[stack.pop()] = num  <span class="cm"># found!</span>
+        stack.append(i)
+    <span class="kw">return</span> result
+<span class="cm"># [2,1,3,5,4] → [3,3,5,-1,-1]</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Valid Parentheses</span><span class="prob-tag">Daily Temperatures</span><span class="prob-tag">Next Greater Element</span><span class="prob-tag">Largest Rectangle in Histogram</span><span class="prob-tag">Min Stack</span><span class="prob-tag">Evaluate RPN</span><span class="prob-tag">Trapping Rain Water (stack ver)</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-green">Time: O(n)</span> <span class="badge badge-green">Space: O(n)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 8 — LINKED LIST ══════════════════════════════════════ -->
+<div class="slide" data-slide="8">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 7: Linked List Tricks 🔗</div>
+  <div class="anim-item slide-subtitle">Fast/slow pointers, dummy nodes, and in-place reversal</div>
+  <div class="anim-item invariant">🔒 Invariant: Slow always trails fast by exactly half — when fast reaches the end, slow is at the midpoint.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Three tricks solve 90% of linked list problems: (1) <strong style="color:var(--cyan);">Fast/Slow pointers</strong> — detect cycles, find middle. (2) <strong style="color:var(--green);">Dummy head node</strong> — simplifies edge cases when head might change. (3) <strong style="color:var(--orange);">In-place reversal</strong> — reverse by rewiring prev/curr/next pointers.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Floyd's Cycle Detection (fast/slow)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">hasCycle</span>(head):
+    slow = fast = head
+    <span class="kw">while</span> fast <span class="kw">and</span> fast.next:
+        slow = slow.next       <span class="cm"># 1 step</span>
+        fast = fast.next.next  <span class="cm"># 2 steps</span>
+        <span class="kw">if</span> slow == fast:
+            <span class="kw">return True</span>  <span class="cm"># they met = cycle!</span>
+    <span class="kw">return False</span></div>
+      <p style="font-size:12px; color:var(--muted); margin-top:4px;">Also: slow pointer at end = middle of list!</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Reverse Linked List (in-place)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">reverse</span>(head):
+    prev = <span class="kw">None</span>
+    curr = head
+    <span class="kw">while</span> curr:
+        nxt = curr.next   <span class="cm"># save next</span>
+        curr.next = prev  <span class="cm"># reverse link</span>
+        prev = curr       <span class="cm"># advance prev</span>
+        curr = nxt        <span class="cm"># advance curr</span>
+    <span class="kw">return</span> prev</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Reverse Linked List</span><span class="prob-tag">Linked List Cycle</span><span class="prob-tag">Merge Two Sorted Lists</span><span class="prob-tag">Remove Nth From End</span><span class="prob-tag">Reorder List</span><span class="prob-tag">LRU Cache</span><span class="prob-tag">Merge K Sorted Lists</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 9 — TREE BFS/DFS ══════════════════════════════════════ -->
+<div class="slide" data-slide="9">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 8: Trees — BFS & DFS 🌳</div>
+  <div class="anim-item slide-subtitle">Level-order (BFS with queue) vs recursive traversal (DFS with stack/recursion)</div>
+  <div class="anim-item invariant">🔒 Invariant: BFS processes all nodes at depth d before any at d+1; DFS fully explores one subtree before touching the other.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea — DFS:</strong> Go deep first. Use recursion. At each node, decide: process current → recurse left → recurse right. Most tree problems are: "the answer at node X = some combination of answers from left and right subtrees." That's the recursive pattern.<br>
+    <strong>💡 Key idea — BFS:</strong> Go level by level. Use a queue. Essential for "level order", "minimum depth", or anything where you need distance/layers.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">DFS — Max Depth (recursive beauty)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">maxDepth</span>(root):
+    <span class="kw">if not</span> root: <span class="kw">return</span> <span class="num">0</span>
+    <span class="kw">return</span> <span class="num">1</span> + max(
+        <span class="fn">maxDepth</span>(root.left),
+        <span class="fn">maxDepth</span>(root.right)
+    )
+<span class="cm"># That's it. 3 lines. Think: "my depth = 1 + max(children)"</span></div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">BFS — Level Order Traversal</div>
+      <div class="code-block"><span class="kw">from</span> collections <span class="kw">import</span> deque
+<span class="kw">def</span> <span class="fn">levelOrder</span>(root):
+    <span class="kw">if not</span> root: <span class="kw">return</span> []
+    result, q = [], deque([root])
+    <span class="kw">while</span> q:
+        level = []
+        <span class="kw">for</span> _ <span class="kw">in</span> range(len(q)):  <span class="cm"># process entire level</span>
+            node = q.popleft()
+            level.append(node.val)
+            <span class="kw">if</span> node.left:  q.append(node.left)
+            <span class="kw">if</span> node.right: q.append(node.right)
+        result.append(level)
+    <span class="kw">return</span> result</div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">🔥 The DFS "global variable" trick (Diameter, Path Sum)</div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">diameterOfBinaryTree</span>(root):
+    diameter = <span class="num">0</span>
+    <span class="kw">def</span> <span class="fn">dfs</span>(node):
+        <span class="kw">nonlocal</span> diameter
+        <span class="kw">if not</span> node: <span class="kw">return</span> <span class="num">0</span>
+        L = <span class="fn">dfs</span>(node.left)
+        R = <span class="fn">dfs</span>(node.right)
+        diameter = max(diameter, L + R)  <span class="cm"># path through this node</span>
+        <span class="kw">return</span> <span class="num">1</span> + max(L, R)               <span class="cm"># return height to parent</span>
+    <span class="fn">dfs</span>(root)
+    <span class="kw">return</span> diameter</div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Max Depth</span><span class="prob-tag">Same Tree</span><span class="prob-tag">Invert Tree</span><span class="prob-tag">Level Order</span><span class="prob-tag">Validate BST</span><span class="prob-tag">Diameter</span><span class="prob-tag">Lowest Common Ancestor</span><span class="prob-tag">Serialize/Deserialize</span><span class="prob-tag">Binary Tree Max Path Sum</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 10 — GRAPH BFS/DFS ══════════════════════════════════════ -->
+<div class="slide" data-slide="10">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 9: Graph Traversal 🕸️</div>
+  <div class="anim-item slide-subtitle">BFS for shortest path, DFS for exploration/connected components</div>
+  <div class="anim-item invariant">🔒 Invariant: A visited node is never re-processed — BFS guarantees shortest path in unweighted graphs; DFS guarantees full component exploration.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Graphs = nodes + edges. Represent as adjacency list. BFS finds shortest unweighted path (level by level). DFS explores all reachable nodes (recursion or stack). <strong>Always track visited nodes</strong> to avoid infinite loops. Grid problems (islands!) are just graph problems where each cell has 4 neighbors.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Number of Islands (DFS on grid)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">numIslands</span>(grid):
+    count = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> range(len(grid)):
+        <span class="kw">for</span> j <span class="kw">in</span> range(len(grid[<span class="num">0</span>])):
+            <span class="kw">if</span> grid[i][j] == <span class="st">"1"</span>:
+                count += <span class="num">1</span>
+                <span class="fn">dfs</span>(grid, i, j)  <span class="cm"># sink the island</span>
+    <span class="kw">return</span> count
+
+<span class="kw">def</span> <span class="fn">dfs</span>(grid, i, j):
+    <span class="kw">if</span> i < <span class="num">0</span> <span class="kw">or</span> j < <span class="num">0</span> <span class="kw">or</span> i >= len(grid) \
+       <span class="kw">or</span> j >= len(grid[<span class="num">0</span>]) <span class="kw">or</span> grid[i][j] != <span class="st">"1"</span>:
+        <span class="kw">return</span>
+    grid[i][j] = <span class="st">"0"</span>  <span class="cm"># mark visited (sink it)</span>
+    <span class="kw">for</span> di, dj <span class="kw">in</span> [(<span class="num">1</span>,<span class="num">0</span>),(-<span class="num">1</span>,<span class="num">0</span>),(<span class="num">0</span>,<span class="num">1</span>),(<span class="num">0</span>,-<span class="num">1</span>)]:
+        <span class="fn">dfs</span>(grid, i+di, j+dj)</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">BFS Shortest Path (unweighted)</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">shortestPath</span>(graph, start, end):
+    q = deque([(start, <span class="num">0</span>)])  <span class="cm"># (node, distance)</span>
+    visited = {start}
+    <span class="kw">while</span> q:
+        node, dist = q.popleft()
+        <span class="kw">if</span> node == end:
+            <span class="kw">return</span> dist
+        <span class="kw">for</span> neighbor <span class="kw">in</span> graph[node]:
+            <span class="kw">if</span> neighbor <span class="kw">not in</span> visited:
+                visited.add(neighbor)
+                q.append((neighbor, dist+<span class="num">1</span>))
+    <span class="kw">return</span> -<span class="num">1</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Number of Islands</span><span class="prob-tag">Clone Graph</span><span class="prob-tag">Pacific Atlantic</span><span class="prob-tag">Rotting Oranges</span><span class="prob-tag">Word Ladder</span><span class="prob-tag">Surrounded Regions</span><span class="prob-tag">Walls and Gates</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 11 — HEAP / PRIORITY QUEUE ══════════════════════════════════════ -->
+<div class="slide" data-slide="11">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 10: Heap / Priority Queue ⛰️</div>
+  <div class="anim-item slide-subtitle">Efficiently get the min or max element — O(log n) push/pop, O(1) peek</div>
+  <div class="anim-item invariant">🔒 Invariant: The heap always holds exactly the k most relevant elements — peek() gives the boundary value instantly.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> When you need "top K", "kth largest", "merge K sorted things", or "always process the smallest/largest first" — use a heap. Python's <code>heapq</code> is a min-heap. For max-heap, negate values. For "kth largest" — maintain a min-heap of size k (the root is the answer).
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Top K Frequent Elements</div>
+      <div class="code-block"><span class="kw">import</span> heapq
+<span class="kw">from</span> collections <span class="kw">import</span> Counter
+
+<span class="kw">def</span> <span class="fn">topKFrequent</span>(nums, k):
+    freq = Counter(nums)
+    <span class="cm"># nlargest returns k items with highest freq</span>
+    <span class="kw">return</span> heapq.nlargest(k, freq.keys(), key=freq.get)
+<span class="cm">
+# OR: min-heap of size k (optimal for streaming)</span>
+<span class="kw">def</span> <span class="fn">topKFrequent2</span>(nums, k):
+    freq = Counter(nums)
+    heap = []
+    <span class="kw">for</span> num, cnt <span class="kw">in</span> freq.items():
+        heapq.heappush(heap, (cnt, num))
+        <span class="kw">if</span> len(heap) > k:
+            heapq.heappop(heap)  <span class="cm"># remove smallest</span>
+    <span class="kw">return</span> [x[<span class="num">1</span>] <span class="kw">for</span> x <span class="kw">in</span> heap]</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--pink);">
+      <div class="card-title" style="color:var(--pink);">Merge K Sorted Lists</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">mergeKLists</span>(lists):
+    heap = []
+    <span class="kw">for</span> i, l <span class="kw">in</span> enumerate(lists):
+        <span class="kw">if</span> l:
+            heapq.heappush(heap, (l.val, i, l))
+    dummy = curr = ListNode(<span class="num">0</span>)
+    <span class="kw">while</span> heap:
+        val, i, node = heapq.heappop(heap)
+        curr.next = node
+        curr = curr.next
+        <span class="kw">if</span> node.next:
+            heapq.heappush(heap, (node.next.val, i, node.next))
+    <span class="kw">return</span> dummy.next</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Kth Largest in Stream</span><span class="prob-tag">Top K Frequent</span><span class="prob-tag">Find Median from Stream</span><span class="prob-tag">Merge K Sorted Lists</span><span class="prob-tag">K Closest Points</span><span class="prob-tag">Task Scheduler</span><span class="prob-tag">Reorganize String</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 12 — BACKTRACKING ══════════════════════════════════════ -->
+<div class="slide" data-slide="12">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 11: Backtracking 🔙</div>
+  <div class="anim-item slide-subtitle">Build solutions incrementally, abandon (backtrack) as soon as constraint violated</div>
+  <div class="anim-item invariant">🔒 Invariant: At each decision point, all choices are explored then perfectly undone — the state resets completely after each branch.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Backtracking = controlled recursion. At each step: (1) Choose — pick a candidate, (2) Explore — recurse with that choice, (3) Unchoose — remove it and try next candidate. It's a DFS on the <em>decision tree</em>. Generates all valid combinations/permutations/subsets.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">The Universal Backtracking Template</div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">backtrack</span>(candidate, state):
+    <span class="kw">if</span> <span class="fn">is_solution</span>(state):
+        result.append(state[:])       <span class="cm"># found valid solution!</span>
+        <span class="kw">return</span>
+    <span class="kw">for</span> choice <span class="kw">in</span> <span class="fn">get_choices</span>(candidate):
+        <span class="kw">if</span> <span class="fn">is_valid</span>(choice):           <span class="cm"># prune invalid branches</span>
+            state.append(choice)       <span class="cm"># 1. CHOOSE</span>
+            <span class="fn">backtrack</span>(next_candidate, state) <span class="cm"># 2. EXPLORE</span>
+            state.pop()                <span class="cm"># 3. UNCHOOSE (backtrack!)</span></div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Subsets</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">subsets</span>(nums):
+    result = []
+    <span class="kw">def</span> <span class="fn">bt</span>(start, path):
+        result.append(path[:])
+        <span class="kw">for</span> i <span class="kw">in</span> range(start, len(nums)):
+            path.append(nums[i])
+            <span class="fn">bt</span>(i + <span class="num">1</span>, path)
+            path.pop()
+    <span class="fn">bt</span>(<span class="num">0</span>, [])
+    <span class="kw">return</span> result</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Permutations</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">permute</span>(nums):
+    result = []
+    <span class="kw">def</span> <span class="fn">bt</span>(path, remaining):
+        <span class="kw">if not</span> remaining:
+            result.append(path[:])
+            <span class="kw">return</span>
+        <span class="kw">for</span> i <span class="kw">in</span> range(len(remaining)):
+            path.append(remaining[i])
+            <span class="fn">bt</span>(path, remaining[:i]+remaining[i+<span class="num">1</span>:])
+            path.pop()
+    <span class="fn">bt</span>([], nums)
+    <span class="kw">return</span> result</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Subsets</span><span class="prob-tag">Permutations</span><span class="prob-tag">Combination Sum</span><span class="prob-tag">N-Queens</span><span class="prob-tag">Word Search</span><span class="prob-tag">Palindrome Partitioning</span><span class="prob-tag">Letter Combinations Phone</span><span class="prob-tag">Sudoku Solver</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 13 — DYNAMIC PROGRAMMING ══════════════════════════════════════ -->
+<div class="slide" data-slide="13">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 12: Dynamic Programming 🧮</div>
+  <div class="anim-item slide-subtitle">THE most feared pattern — but it's just "smart recursion with caching"</div>
+  <div class="anim-item invariant">🔒 Invariant: dp[i] always holds the optimal answer for subproblem i — each transition preserves optimality by considering all previous states.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> DP = recursion where subproblems OVERLAP (you solve the same subproblem many times). Two approaches: (1) <strong>Top-down</strong> — write recursion + add memoization (@cache). (2) <strong>Bottom-up</strong> — fill a table from base cases up. <em>Start with top-down (easier to think), then optimize to bottom-up if needed.</em>
+  </div>
+
+  <div class="anim-item card" style="background:rgba(167,139,250,0.08); border-color:var(--purple);">
+    <div class="card-title" style="color:var(--purple);">The 3-Step DP Recipe:</div>
+    <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+      <p><strong style="color:var(--cyan);">1. Define state:</strong> What changes? → dp[i] = "the answer for the first i items" (or dp[i][j] for 2D)</p>
+      <p><strong style="color:var(--green);">2. Find recurrence:</strong> How does dp[i] relate to previous states? (dp[i] = max(dp[i-1], dp[i-2] + val[i]))</p>
+      <p><strong style="color:var(--orange);">3. Base cases:</strong> What are dp[0], dp[1]?</p>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Climbing Stairs (DP Hello World)</div>
+      <div class="code-block"><span class="cm"># How many ways to climb n stairs (1 or 2 steps)?</span>
+<span class="cm"># dp[i] = dp[i-1] + dp[i-2]  ← it's Fibonacci!</span>
+<span class="kw">def</span> <span class="fn">climbStairs</span>(n):
+    <span class="kw">if</span> n <= <span class="num">2</span>: <span class="kw">return</span> n
+    a, b = <span class="num">1</span>, <span class="num">2</span>
+    <span class="kw">for</span> _ <span class="kw">in</span> range(<span class="num">3</span>, n + <span class="num">1</span>):
+        a, b = b, a + b
+    <span class="kw">return</span> b</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--red);">
+      <div class="card-title" style="color:var(--red);">🔥 0/1 Knapsack Pattern</div>
+      <div class="code-block"><span class="cm"># For each item: take it or skip it</span>
+<span class="kw">def</span> <span class="fn">knapsack</span>(weights, values, capacity):
+    n = len(weights)
+    dp = [[<span class="num">0</span>]*(capacity+<span class="num">1</span>) <span class="kw">for</span> _ <span class="kw">in</span> range(n+<span class="num">1</span>)]
+    <span class="kw">for</span> i <span class="kw">in</span> range(<span class="num">1</span>, n+<span class="num">1</span>):
+        <span class="kw">for</span> w <span class="kw">in</span> range(capacity+<span class="num">1</span>):
+            dp[i][w] = dp[i-<span class="num">1</span>][w]  <span class="cm"># skip item i</span>
+            <span class="kw">if</span> weights[i-<span class="num">1</span>] <= w:
+                dp[i][w] = max(dp[i][w],
+                    dp[i-<span class="num">1</span>][w-weights[i-<span class="num">1</span>]] + values[i-<span class="num">1</span>])
+    <span class="kw">return</span> dp[n][capacity]</div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--orange);">
+    <div class="card-title" style="color:var(--orange);">Common DP Sub-patterns:</div>
+    <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+      <p><strong style="color:var(--cyan);">1D DP:</strong> Fibonacci, Climbing Stairs, House Robber, Coin Change, Word Break</p>
+      <p><strong style="color:var(--green);">2D DP:</strong> Longest Common Subsequence, Edit Distance, Unique Paths, Knapsack</p>
+      <p><strong style="color:var(--purple);">Interval DP:</strong> Burst Balloons, Palindrome Partitioning</p>
+      <p><strong style="color:var(--pink);">Bitmask DP:</strong> Traveling Salesman, Partition to K Equal Subsets</p>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Climbing Stairs</span><span class="prob-tag">House Robber</span><span class="prob-tag">Coin Change</span><span class="prob-tag">Longest Increasing Subsequence</span><span class="prob-tag">Word Break</span><span class="prob-tag">Unique Paths</span><span class="prob-tag">Edit Distance</span><span class="prob-tag">LCS</span><span class="prob-tag">Partition Equal Subset</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 14 — GREEDY ══════════════════════════════════════ -->
+<div class="slide" data-slide="14">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 13: Greedy 🤑</div>
+  <div class="anim-item slide-subtitle">Make the locally optimal choice at each step — works when it leads to global optimal</div>
+  <div class="anim-item invariant">🔒 Invariant: The locally optimal choice at each step provably leads to the global optimum — no future decision can improve a past one.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Greedy works when the problem has "greedy choice property" — the best local choice never needs to be revised. How to know? If sorting + greedy gives the right answer, it's greedy. If you need to "undo" choices, it's DP/backtracking instead. <strong>Greedy is often simpler code but harder to PROVE correct.</strong>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Jump Game — Can you reach the end?</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">canJump</span>(nums):
+    maxReach = <span class="num">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> range(len(nums)):
+        <span class="kw">if</span> i > maxReach: <span class="kw">return False</span>
+        maxReach = max(maxReach, i + nums[i])
+    <span class="kw">return True</span>
+<span class="cm"># Greedy: track the farthest you can reach. If current pos > farthest, stuck.</span></div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Max Profit — Best time to buy/sell stock</div>
+      <div class="code-block"><span class="kw">def</span> <span class="fn">maxProfit</span>(prices):
+    min_price = float(<span class="st">'inf'</span>)
+    max_profit = <span class="num">0</span>
+    <span class="kw">for</span> price <span class="kw">in</span> prices:
+        min_price = min(min_price, price)
+        max_profit = max(max_profit, price - min_price)
+    <span class="kw">return</span> max_profit
+<span class="cm"># Greedy: always track the minimum seen so far, profit = today - min.</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Jump Game I/II</span><span class="prob-tag">Best Time Buy/Sell Stock</span><span class="prob-tag">Gas Station</span><span class="prob-tag">Hand of Straights</span><span class="prob-tag">Partition Labels</span><span class="prob-tag">Valid Parenthesis String</span><span class="prob-tag">Maximum Subarray (Kadane)</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 15 — INTERVALS ══════════════════════════════════════ -->
+<div class="slide" data-slide="15">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 14: Intervals 📏</div>
+  <div class="anim-item slide-subtitle">Sort by start time, then merge/process overlapping intervals</div>
+  <div class="anim-item invariant">🔒 Invariant: After sorting by start, overlapping intervals are always adjacent — process left-to-right, extending or closing the current group.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> ALWAYS sort intervals by start time first. Then iterate: if current overlaps with previous, merge them. Two intervals overlap when <code>a.start < b.end AND b.start < a.end</code>. After sorting, you only need to compare adjacent intervals.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div class="card-title" style="color:var(--cyan);">Merge Intervals</div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">merge</span>(intervals):
+    intervals.sort()  <span class="cm"># sort by start</span>
+    result = [intervals[<span class="num">0</span>]]
+    <span class="kw">for</span> start, end <span class="kw">in</span> intervals[<span class="num">1</span>:]:
+        <span class="kw">if</span> start <= result[-<span class="num">1</span>][<span class="num">1</span>]:     <span class="cm"># overlaps?</span>
+            result[-<span class="num">1</span>][<span class="num">1</span>] = max(result[-<span class="num">1</span>][<span class="num">1</span>], end)  <span class="cm"># merge</span>
+        <span class="kw">else</span>:
+            result.append([start, end])  <span class="cm"># no overlap, add new</span>
+    <span class="kw">return</span> result</div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Merge Intervals</span><span class="prob-tag">Insert Interval</span><span class="prob-tag">Non-overlapping Intervals</span><span class="prob-tag">Meeting Rooms I/II</span><span class="prob-tag">Minimum Platforms</span>
+  </div>
+  <div class="anim-item" style="margin-top:6px;"><span class="badge badge-orange">Time: O(n log n)</span> <span class="badge badge-green">Space: O(n)</span></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 16 — UNION FIND ══════════════════════════════════════ -->
+<div class="slide" data-slide="16">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 15: Union-Find (Disjoint Set) 🔗</div>
+  <div class="anim-item slide-subtitle">Group elements into connected components — near O(1) per operation</div>
+  <div class="anim-item invariant">🔒 Invariant: find(x) always returns the true root of x's component — union merges trees while path compression keeps them flat.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong>Union-Find answers: "Are X and Y in the same group?" and "Merge groups of X and Y." Each element has a parent. <code>find(x)</code> returns the root of x's group. <code>union(x,y)</code> merges two groups. With path compression + union by rank → nearly O(1) per operation. Use when you need connected components and edges arrive dynamically.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--green);">
+    <div class="card-title" style="color:var(--green);">Union-Find Template (memorize this!)</div>
+    <div class="code-block"><span class="kw">class</span> <span class="fn">UnionFind</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self, n):
+        self.parent = list(range(n))
+        self.rank = [<span class="num">0</span>] * n
+
+    <span class="kw">def</span> <span class="fn">find</span>(self, x):
+        <span class="kw">if</span> self.parent[x] != x:
+            self.parent[x] = self.<span class="fn">find</span>(self.parent[x])  <span class="cm"># path compression</span>
+        <span class="kw">return</span> self.parent[x]
+
+    <span class="kw">def</span> <span class="fn">union</span>(self, x, y):
+        px, py = self.<span class="fn">find</span>(x), self.<span class="fn">find</span>(y)
+        <span class="kw">if</span> px == py: <span class="kw">return False</span>  <span class="cm"># already connected</span>
+        <span class="kw">if</span> self.rank[px] < self.rank[py]: px, py = py, px
+        self.parent[py] = px  <span class="cm"># union by rank</span>
+        <span class="kw">if</span> self.rank[px] == self.rank[py]: self.rank[px] += <span class="num">1</span>
+        <span class="kw">return True</span></div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Number of Connected Components</span><span class="prob-tag">Redundant Connection</span><span class="prob-tag">Graph Valid Tree</span><span class="prob-tag">Accounts Merge</span><span class="prob-tag">Longest Consecutive Sequence</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 17 — TOPOLOGICAL SORT ══════════════════════════════════════ -->
+<div class="slide" data-slide="17">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Pattern 16: Topological Sort 📐</div>
+  <div class="anim-item slide-subtitle">Order nodes in a DAG so every edge goes from earlier to later</div>
+  <div class="anim-item invariant">🔒 Invariant: A node is emitted only when all its dependencies have been processed — in-degree reaching 0 guarantees this.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> When you have dependencies (course A before B, task X before Y), topological sort gives a valid ordering. Use <strong>Kahn's Algorithm</strong>: track in-degrees, start from nodes with 0 in-degree (no prerequisites), process them, reduce in-degrees of neighbors, repeat. If you can't process all nodes → cycle exists (impossible to complete).
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">Course Schedule II (Kahn's BFS)</div>
+    <div class="code-block"><span class="kw">def</span> <span class="fn">findOrder</span>(numCourses, prerequisites):
+    graph = defaultdict(list)
+    in_degree = [<span class="num">0</span>] * numCourses
+    <span class="kw">for</span> course, prereq <span class="kw">in</span> prerequisites:
+        graph[prereq].append(course)
+        in_degree[course] += <span class="num">1</span>
+
+    q = deque([i <span class="kw">for</span> i <span class="kw">in</span> range(numCourses) <span class="kw">if</span> in_degree[i] == <span class="num">0</span>])
+    order = []
+    <span class="kw">while</span> q:
+        node = q.popleft()
+        order.append(node)
+        <span class="kw">for</span> neighbor <span class="kw">in</span> graph[node]:
+            in_degree[neighbor] -= <span class="num">1</span>
+            <span class="kw">if</span> in_degree[neighbor] == <span class="num">0</span>:
+                q.append(neighbor)
+
+    <span class="kw">return</span> order <span class="kw">if</span> len(order) == numCourses <span class="kw">else</span> []  <span class="cm"># cycle check!</span></div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <span class="prob-tag">Course Schedule I/II</span><span class="prob-tag">Alien Dictionary</span><span class="prob-tag">Build Order</span><span class="prob-tag">Task Scheduler (with deps)</span><span class="prob-tag">Minimum Height Trees</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 18 — TRIE + BIT MANIPULATION ══════════════════════════════════════ -->
+<div class="slide" data-slide="18">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Patterns 17-18: Trie & Bit Manipulation 🔤⚙️</div>
+  <div class="anim-item slide-subtitle">Prefix trees for strings, and bit tricks for O(1) magic</div>
+  <div class="anim-item invariant">🔒 Invariant: Each root-to-node path represents a unique prefix — shared prefixes share the exact same path in the tree.</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Trie:</strong> A tree where each edge is a character. Enables O(word_length) insert/search/prefix-check. Use when problem says "prefix", "autocomplete", "word dictionary", "starts with".<br>
+    <strong>💡 Bit Manipulation:</strong> XOR is king. XOR of a number with itself = 0. XOR of a number with 0 = itself. This means: XOR all numbers → duplicates cancel out, the unique one remains. Also: n & (n-1) removes lowest set bit.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Trie Implementation</div>
+      <div class="code-block"><span class="kw">class</span> <span class="fn">Trie</span>:
+    <span class="kw">def</span> <span class="fn">__init__</span>(self):
+        self.children = {}
+        self.is_end = <span class="kw">False</span>
+
+    <span class="kw">def</span> <span class="fn">insert</span>(self, word):
+        node = self
+        <span class="kw">for</span> c <span class="kw">in</span> word:
+            <span class="kw">if</span> c <span class="kw">not in</span> node.children:
+                node.children[c] = <span class="fn">Trie</span>()
+            node = node.children[c]
+        node.is_end = <span class="kw">True</span>
+
+    <span class="kw">def</span> <span class="fn">search</span>(self, word):
+        node = self._find(word)
+        <span class="kw">return</span> node <span class="kw">is not None and</span> node.is_end
+
+    <span class="kw">def</span> <span class="fn">startsWith</span>(self, prefix):
+        <span class="kw">return</span> self._find(prefix) <span class="kw">is not None</span></div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Essential Bit Tricks</div>
+      <div class="code-block"><span class="cm"># Single number (find the one that appears once)</span>
+<span class="kw">def</span> <span class="fn">singleNumber</span>(nums):
+    result = <span class="num">0</span>
+    <span class="kw">for</span> n <span class="kw">in</span> nums:
+        result ^= n  <span class="cm"># XOR: pairs cancel</span>
+    <span class="kw">return</span> result
+
+<span class="cm"># Count set bits</span>
+<span class="kw">def</span> <span class="fn">countBits</span>(n):
+    count = <span class="num">0</span>
+    <span class="kw">while</span> n:
+        n &= n - <span class="num">1</span>  <span class="cm"># remove lowest set bit</span>
+        count += <span class="num">1</span>
+    <span class="kw">return</span> count
+
+<span class="cm"># Check if power of 2</span>
+<span class="kw">def</span> <span class="fn">isPowerOf2</span>(n):
+    <span class="kw">return</span> n > <span class="num">0</span> <span class="kw">and</span> n & (n-<span class="num">1</span>) == <span class="num">0</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <strong>Trie:</strong> <span class="prob-tag">Implement Trie</span><span class="prob-tag">Word Search II</span><span class="prob-tag">Design Search Autocomplete</span> &nbsp;
+    <strong>Bits:</strong> <span class="prob-tag">Single Number</span><span class="prob-tag">Counting Bits</span><span class="prob-tag">Missing Number</span><span class="prob-tag">Reverse Bits</span>
+  </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════ SLIDE 19 — FINAL CHEAT SHEET ══════════════════════════════════════ -->
+<div class="slide" data-slide="19">
+<div class="slide-inner">
+  <div class="anim-item slide-title" style="font-size:28px;">🏆 The Complete Cheat Sheet — Print This!</div>
+  <div class="anim-item slide-subtitle">Pattern recognition in 10 seconds + time complexity</div>
+
+  <div class="anim-item" style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+      <thead>
+        <tr style="background:var(--surface2);">
+          <th style="padding:8px 10px; text-align:left; font-weight:700; width:18%;">Pattern</th>
+          <th style="padding:8px 10px; text-align:left; font-weight:700; width:32%;">When to use</th>
+          <th style="padding:8px 10px; text-align:left; font-weight:700; width:35%;">Key "aha!" signal</th>
+          <th style="padding:8px 10px; text-align:left; font-weight:700; width:15%;">Time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--cyan); font-weight:700;">Two Pointers</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Sorted array, pair/triplet problems</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Find pair that sums to X" in sorted</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--green); font-weight:700;">Sliding Window</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Contiguous subarray/substring with constraint</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Longest/shortest subarray with..."</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--orange); font-weight:700;">Binary Search</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Sorted data or monotonic yes/no boundary</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Minimum X such that condition is true"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(log n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--blue); font-weight:700;">Prefix Sum</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Range sum queries, subarray sum = K</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Subarray with sum equals K"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--cyan); font-weight:700;">HashMap/Set</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Need O(1) lookup, counting, grouping</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Does complement exist?" "Count frequencies"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--purple); font-weight:700;">Stack</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Matching/nesting, next greater element</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Parentheses", "next greater", "histogram"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--pink); font-weight:700;">Linked List</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">In-place reversal, cycle detection, merge</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">Fast/slow pointers, dummy head, reverse</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--green); font-weight:700;">Tree BFS/DFS</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Any tree problem</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">Level order = BFS. Everything else = DFS recursion.</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--cyan); font-weight:700;">Graph BFS/DFS</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Grid/graph traversal, shortest path, components</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Number of islands", "shortest path", "connected"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(V+E)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--orange); font-weight:700;">Heap</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Top K, kth element, merge K sorted, median</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"K largest", "K closest", "merge K sorted"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-orange">O(n log k)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--purple); font-weight:700;">Backtracking</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">All combinations/permutations/subsets</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Generate all...", "find all...", "N-Queens"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-red">O(2ⁿ/n!)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--red); font-weight:700;">DP</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Overlapping subproblems, optimal value</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Min/max cost to...", "how many ways to...", "can you..."</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-orange">varies</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--lime); font-weight:700;">Greedy</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Local optimal = global optimal</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Can you reach the end?", "max meetings", "min coins"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--pink); font-weight:700;">Intervals</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Overlapping ranges, merge, schedule</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Merge intervals", "meeting rooms", "overlapping"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-orange">O(n log n)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--green); font-weight:700;">Union-Find</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Dynamic connectivity, components</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Are X and Y connected?", "number of components"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">≈O(1)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--purple); font-weight:700;">Topo Sort</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Dependencies, ordering, cycle detection</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Course schedule", "build order", "prerequisites"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(V+E)</span></td></tr>
+        <tr><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--cyan); font-weight:700;">Trie</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted);">Prefix search, autocomplete, word dictionary</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);">"Starts with", "word search in board"</td><td style="padding:6px 10px; border-bottom:1px solid var(--surface2);"><span class="badge badge-green">O(L)</span></td></tr>
+        <tr><td style="padding:6px 10px; color:var(--orange); font-weight:700;">Bit Manipulation</td><td style="padding:6px 10px; color:var(--muted);">Single number, power of 2, counting bits</td><td style="padding:6px 10px;">"Every element appears twice except one"</td><td style="padding:6px 10px;"><span class="badge badge-green">O(n)</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="anim-item card" style="margin-top:14px; background:rgba(34,211,238,0.08); border-color:var(--cyan); text-align:center;">
+    <div style="font-size:18px; font-weight:700; color:var(--cyan); margin-bottom:6px;">🎯 The Ultimate Rule</div>
+    <p style="font-size:16px; line-height:1.6;">Don't solve 500 random problems. Solve <strong>3-5 problems per pattern</strong> (= ~80 problems total). Understand the pattern deeply. Then every new problem is just pattern recognition + minor adaptation. <strong style="color:var(--green);">Quality > Quantity.</strong></p>
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin-top:12px; font-size:13px; color:var(--muted);">
+    📚 <strong>Best resource:</strong> NeetCode 150 (neetcode.io) — curated by pattern, video explanations, difficulty order.
+  </div>
+</div>
+</div>
+
+</div><!-- end slides-wrapper -->
+
+<script>
+let currentSlide = 0;
+const totalSlides = document.querySelectorAll('.slide').length;
+
+function updateUI() {
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.remove('active', 'exit-left');
+    if (i === currentSlide) s.classList.add('active');
+    else if (i < currentSlide) s.classList.add('exit-left');
+  });
+  document.getElementById('progressFill').style.width = (currentSlide / (totalSlides - 1) * 100) + '%';
+  document.getElementById('stepCounter').textContent = (currentSlide + 1) + ' / ' + totalSlides;
+  document.getElementById('btnPrev').disabled = currentSlide === 0;
+  document.getElementById('btnNext').disabled = currentSlide === totalSlides - 1;
+  const wrapper = document.querySelector('.slides-wrapper');
+  wrapper.scrollTop = 0;
+}
+
+function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateUI(); updateJump(); } }
+function prevSlide() { if (currentSlide > 0) { currentSlide--; updateUI(); updateJump(); } }
+function goToSlide(n) { if (n >= 0 && n < totalSlides) { currentSlide = n; updateUI(); updateJump(); } }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+});
+
+// Slide jump dropdown
+const jumpSelect = document.getElementById('slideJump');
+const slideTitles = ['Title','Meta-Strategy','Two Pointers','Sliding Window','Binary Search','Prefix Sum','Hash Map','Stack','Linked List','Tree BFS/DFS','Graph BFS/DFS','Heap','Backtracking','Dynamic Programming','Greedy','Intervals','Union Find','Topological Sort','Trie + Bits','Cheat Sheet'];
+for (let i = 0; i < totalSlides; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = (i + 1) + '. ' + (slideTitles[i] || 'Slide ' + (i + 1));
+  jumpSelect.appendChild(opt);
+}
+function updateJump() { jumpSelect.value = currentSlide; }
+
+updateUI();
+</script>
+</body>
+</html>

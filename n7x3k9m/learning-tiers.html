@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Mastery Tiers — Easy → Brutal</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --green: #34d399;
+  --orange: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --cyan: #22d3ee;
+  --lime: #a3e635;
+  --t6: #34d399;
+  --t5: #a3e635;
+  --t4: #60a5fa;
+  --t3: #fbbf24;
+  --t2: #f472b6;
+  --t1: #f87171;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(15,23,42,0.96); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--surface2); padding:10px 24px;
+  display:flex; align-items:center; gap:16px;
+}
+.topbar h1 { font-size:15px; color:var(--cyan); white-space:nowrap; }
+.progress-track { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--t6),var(--t5),var(--t4),var(--t3),var(--t2),var(--t1)); border-radius:3px; transition:width 0.5s ease; }
+.step-counter { font-size:14px; color:var(--muted); white-space:nowrap; }
+
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  background:rgba(15,23,42,0.96); backdrop-filter:blur(10px);
+  border-top:1px solid var(--surface2); padding:12px 24px;
+  display:flex; align-items:center; justify-content:center; gap:16px;
+}
+.btn { padding:8px 24px; border:none; border-radius:8px; font-size:15px; cursor:pointer; transition:all 0.2s; font-weight:600; }
+.btn-primary { background:var(--cyan); color:var(--bg); }
+.btn-primary:hover { background:#67e8f9; transform:translateY(-1px); }
+.btn-secondary { background:var(--surface2); color:var(--text); }
+.btn-secondary:hover { background:#475569; }
+.btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+.key-hint { font-size:12px; color:var(--muted); }
+
+.slides-wrapper {
+  position:fixed; top:82px; bottom:56px; left:0; right:0; overflow-y:auto; overflow-x:hidden;
+}
+.slides-wrapper::-webkit-scrollbar { width:6px; }
+.slides-wrapper::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:3px; }
+
+.slide {
+  position:absolute; inset:0;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:24px 36px;
+  opacity:0; transform:translateX(60px);
+  transition:opacity 0.5s, transform 0.5s;
+  pointer-events:none; overflow-y:auto;
+}
+.slide.active { opacity:1; transform:translateX(0); pointer-events:auto; }
+.slide.exit-left { opacity:0; transform:translateX(-60px); }
+.slide-inner { max-width:1200px; width:100%; padding-bottom:40px; }
+
+@keyframes fadeInUp { from{opacity:0;transform:translateY(22px)} to{opacity:1;transform:translateY(0)} }
+.anim-item { opacity:0; }
+.slide.active .anim-item { animation:fadeInUp 0.55s ease forwards; }
+.slide.active .anim-item:nth-child(1) { animation-delay:0.05s }
+.slide.active .anim-item:nth-child(2) { animation-delay:0.15s }
+.slide.active .anim-item:nth-child(3) { animation-delay:0.25s }
+.slide.active .anim-item:nth-child(4) { animation-delay:0.35s }
+.slide.active .anim-item:nth-child(5) { animation-delay:0.45s }
+.slide.active .anim-item:nth-child(6) { animation-delay:0.55s }
+.slide.active .anim-item:nth-child(7) { animation-delay:0.65s }
+.slide.active .anim-item:nth-child(8) { animation-delay:0.75s }
+.slide.active .anim-item:nth-child(9) { animation-delay:0.85s }
+.slide.active .anim-item:nth-child(10) { animation-delay:0.95s }
+
+.slide-title {
+  font-size:30px; font-weight:800; margin-bottom:6px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.slide-subtitle { font-size:15px; color:var(--muted); margin-bottom:22px; }
+
+/* ─── Tier Header ─── */
+.tier-header {
+  display:flex; align-items:center; gap:14px; margin-bottom:18px;
+  padding:16px 20px; border-radius:14px; border:1px solid;
+}
+.tier-badge {
+  font-size:28px; font-weight:900; min-width:52px; text-align:center;
+  padding:6px 12px; border-radius:10px;
+}
+.tier-info h2 { font-size:22px; font-weight:800; }
+.tier-info p { font-size:14px; color:var(--muted); margin-top:3px; }
+.tier-time {
+  margin-left:auto; font-size:13px; font-weight:700;
+  padding:4px 12px; border-radius:20px;
+}
+
+/* ─── Pattern Cards ─── */
+.patterns-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:12px;
+}
+.pattern-card {
+  background:var(--surface); border-radius:12px; padding:16px;
+  border:1px solid var(--surface2); position:relative; overflow:hidden;
+  transition:transform 0.2s, border-color 0.2s;
+}
+.pattern-card:hover { transform:translateY(-2px); }
+.pattern-card::before {
+  content:''; position:absolute; top:0; left:0; width:3px; height:100%; border-radius:2px 0 0 2px;
+}
+
+.pattern-num {
+  position:absolute; top:12px; right:14px;
+  font-size:11px; font-weight:700; color:var(--muted);
+  background:var(--surface2); padding:2px 7px; border-radius:10px;
+}
+.pattern-name { font-size:16px; font-weight:800; margin-bottom:6px; }
+.pattern-type {
+  font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px;
+  display:inline-block; margin-bottom:8px;
+}
+.type-dsa { background:rgba(96,165,250,0.15); color:var(--blue); }
+.type-sd  { background:rgba(167,139,250,0.15); color:var(--purple); }
+.type-both { background:rgba(34,211,238,0.15); color:var(--cyan); }
+
+.pattern-what { font-size:13px; color:var(--text); line-height:1.6; margin-bottom:8px; }
+.pattern-key {
+  font-size:12px; background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.2);
+  border-radius:8px; padding:8px 10px; line-height:1.6;
+}
+.pattern-key strong { color:var(--cyan); }
+.pattern-example {
+  font-size:12px; color:var(--muted); margin-top:8px;
+  padding-top:8px; border-top:1px solid var(--surface2);
+}
+.pattern-example span { font-style:italic; }
+
+/* ─── Tier colors ─── */
+.t6 .pattern-card::before { background:var(--t6); }
+.t6 .pattern-card:hover { border-color:rgba(52,211,153,0.4); }
+.t6 .tier-header { background:rgba(52,211,153,0.06); border-color:rgba(52,211,153,0.3); }
+.t6 .tier-badge { background:rgba(52,211,153,0.15); color:var(--t6); }
+.t6 .tier-info h2 { color:var(--t6); }
+.t6 .tier-time { background:rgba(52,211,153,0.15); color:var(--t6); }
+.t6 .pattern-name { color:var(--t6); }
+
+.t5 .pattern-card::before { background:var(--t5); }
+.t5 .pattern-card:hover { border-color:rgba(163,230,53,0.4); }
+.t5 .tier-header { background:rgba(163,230,53,0.06); border-color:rgba(163,230,53,0.3); }
+.t5 .tier-badge { background:rgba(163,230,53,0.15); color:var(--t5); }
+.t5 .tier-info h2 { color:var(--t5); }
+.t5 .tier-time { background:rgba(163,230,53,0.15); color:var(--t5); }
+.t5 .pattern-name { color:var(--t5); }
+
+.t4 .pattern-card::before { background:var(--t4); }
+.t4 .pattern-card:hover { border-color:rgba(96,165,250,0.4); }
+.t4 .tier-header { background:rgba(96,165,250,0.06); border-color:rgba(96,165,250,0.3); }
+.t4 .tier-badge { background:rgba(96,165,250,0.15); color:var(--t4); }
+.t4 .tier-info h2 { color:var(--t4); }
+.t4 .tier-time { background:rgba(96,165,250,0.15); color:var(--t4); }
+.t4 .pattern-name { color:var(--t4); }
+
+.t3 .pattern-card::before { background:var(--t3); }
+.t3 .pattern-card:hover { border-color:rgba(251,191,36,0.4); }
+.t3 .tier-header { background:rgba(251,191,36,0.06); border-color:rgba(251,191,36,0.3); }
+.t3 .tier-badge { background:rgba(251,191,36,0.15); color:var(--t3); }
+.t3 .tier-info h2 { color:var(--t3); }
+.t3 .tier-time { background:rgba(251,191,36,0.15); color:var(--t3); }
+.t3 .pattern-name { color:var(--t3); }
+
+.t2 .pattern-card::before { background:var(--t2); }
+.t2 .pattern-card:hover { border-color:rgba(244,114,182,0.4); }
+.t2 .tier-header { background:rgba(244,114,182,0.06); border-color:rgba(244,114,182,0.3); }
+.t2 .tier-badge { background:rgba(244,114,182,0.15); color:var(--t2); }
+.t2 .tier-info h2 { color:var(--t2); }
+.t2 .tier-time { background:rgba(244,114,182,0.15); color:var(--t2); }
+.t2 .pattern-name { color:var(--t2); }
+
+.t1 .pattern-card::before { background:var(--t1); }
+.t1 .pattern-card:hover { border-color:rgba(248,113,113,0.4); }
+.t1 .tier-header { background:rgba(248,113,113,0.06); border-color:rgba(248,113,113,0.3); }
+.t1 .tier-badge { background:rgba(248,113,113,0.15); color:var(--t1); }
+.t1 .tier-info h2 { color:var(--t1); }
+.t1 .tier-time { background:rgba(248,113,113,0.15); color:var(--t1); }
+.t1 .pattern-name { color:var(--t1); }
+
+/* ─── Overview slide ─── */
+.overview-grid {
+  display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+}
+.overview-card {
+  border-radius:14px; padding:18px; border:1px solid; text-align:center;
+}
+.overview-emoji { font-size:32px; margin-bottom:8px; }
+.overview-tier { font-size:22px; font-weight:900; margin-bottom:4px; }
+.overview-label { font-size:16px; font-weight:700; margin-bottom:6px; }
+.overview-count { font-size:13px; color:var(--muted); margin-bottom:8px; }
+.overview-time { font-size:12px; font-weight:700; padding:3px 10px; border-radius:12px; display:inline-block; margin-bottom:10px; }
+.overview-names { font-size:11px; color:var(--muted); line-height:1.7; }
+
+/* ─── Hero Title Slide ─── */
+.hero { text-align:center; padding:0 20px; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:calc(100vh - 120px); }
+.hero-title { font-size:52px; font-weight:900; line-height:1.1; margin-bottom:16px;
+  background:linear-gradient(135deg,var(--t6) 0%,var(--t5) 20%,var(--t4) 40%,var(--t3) 60%,var(--t2) 80%,var(--t1) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hero-sub { font-size:18px; color:var(--muted); margin-bottom:28px; max-width:620px; line-height:1.7; }
+.hero-pills { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-bottom:28px; }
+.hero-pill { padding:6px 16px; border-radius:20px; font-size:13px; font-weight:700; border:1px solid; }
+.hero-stat { font-size:14px; color:var(--muted); }
+.hero-stat strong { color:var(--cyan); }
+
+.tier-rainbow {
+  display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:20px;
+}
+.tr-item {
+  display:flex; align-items:center; gap:6px; padding:8px 16px;
+  border-radius:20px; font-size:13px; font-weight:700; border:1px solid;
+  cursor:pointer; transition:transform 0.15s;
+}
+.tr-item:hover { transform:scale(1.05); }
+
+/* ─── Attack order slide ─── */
+.week-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:14px; }
+.week-card {
+  background:var(--surface); border-radius:12px; padding:16px; border:1px solid var(--surface2);
+}
+.week-label { font-size:13px; font-weight:700; color:var(--muted); margin-bottom:6px; text-transform:uppercase; letter-spacing:0.05em; }
+.week-title { font-size:18px; font-weight:800; margin-bottom:10px; }
+.week-items { list-style:none; }
+.week-items li { font-size:13px; padding:4px 0; border-bottom:1px solid var(--surface2); color:var(--muted); }
+.week-items li:last-child { border-bottom:none; }
+.week-items li strong { color:var(--text); }
+.week-items li .dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px; }
+
+.note-box {
+  background:rgba(34,211,238,0.06); border:1px solid rgba(34,211,238,0.25);
+  border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; margin-top:16px;
+}
+.note-box strong { color:var(--cyan); }
+.tier-table { width:100%; border-collapse:collapse; font-size:13px; }
+.tier-table th { text-align:left; padding:5px 10px; font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid rgba(255,255,255,0.08); }
+.tier-table td { padding:5px 10px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:top; line-height:1.5; }
+.tier-table td:first-child { width:32px; text-align:center; opacity:0.5; font-size:11px; }
+.tier-table td:nth-child(2) { width:42%; }
+.tier-table td:nth-child(3) { color:rgba(255,255,255,0.6); font-size:12px; }
+.t1-table th { color:var(--t1); } .t1-table tr.you-row td { background:rgba(52,211,153,0.07); }
+.t2-table th { color:var(--t2); }
+.t3-table th { color:var(--t3); }
+.t4-table th { color:var(--t4); }
+.t5-table th { color:var(--t5); }
+.t6-table th { color:var(--t6); }
+
+/* ─── Guide Nav Bar ─── */
+.guide-nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:rgba(15,23,42,0.98); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--surface2); padding:6px 16px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.guide-nav a {
+  padding:5px 14px; border-radius:6px; font-size:12px; font-weight:600;
+  text-decoration:none; color:var(--muted); transition:all 0.2s;
+  border:1px solid transparent; white-space:nowrap;
+}
+.guide-nav a:hover { color:var(--text); background:var(--surface2); }
+.guide-nav a.active { color:var(--cyan); border-color:var(--cyan); background:rgba(34,211,238,0.1); }
+.guide-nav .home-btn { color:var(--text); font-size:14px; margin-right:8px; }
+.guide-nav .home-btn:hover { color:var(--cyan); }
+.slide-jump { padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; background:var(--surface2); color:var(--text); border:1px solid var(--surface2); cursor:pointer; outline:none; }
+.slide-jump:hover { border-color:var(--cyan); }
+.slide-jump:focus { border-color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="guide-nav">
+  <a href="index.html" class="home-btn" title="Home">🏠</a>
+  <a href="learning-tiers.html" class="active">Learning Tiers</a>
+  <a href="leetcode-patterns.html">LeetCode Patterns</a>
+  <a href="system-design.html">System Design</a>
+  <a href="cloud-explained.html">Cloud Computing</a>
+  <a href="llm-explained.html">How LLMs Work</a>
+</div>
+
+<div class="topbar" style="top:36px;">
+  <h1>⚔️ Interview Mastery Tiers</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:10%"></div></div>
+  <span class="step-counter" id="stepCounter">1 / 10</span>
+</div>
+
+<div class="slides-wrapper" id="slidesWrapper">
+
+  <!-- ══════════════════════════════════════════════ SLIDE 0: TITLE -->
+  <div class="slide active" id="slide-0">
+    <div class="slide-inner">
+      <div class="hero">
+        <div class="anim-item hero-title">From Easy → Brutal</div>
+        <div class="anim-item hero-sub">
+          41 Interview Patterns — DS&amp;A + System Design — ordered by difficulty to internalize.<br>
+          Calibrated for an experienced engineer with strong distributed systems background.
+        </div>
+        <div class="anim-item hero-pills">
+          <div class="hero-pill" style="border-color:rgba(52,211,153,0.4);color:var(--t6)">Tier 6 · Easy</div>
+          <div class="hero-pill" style="border-color:rgba(163,230,53,0.4);color:var(--t5)">Tier 5 · Medium-Easy</div>
+          <div class="hero-pill" style="border-color:rgba(96,165,250,0.4);color:var(--t4)">Tier 4 · Medium</div>
+          <div class="hero-pill" style="border-color:rgba(251,191,36,0.4);color:var(--t3)">Tier 3 · Medium-Hard</div>
+          <div class="hero-pill" style="border-color:rgba(244,114,182,0.4);color:var(--t2)">Tier 2 · Hard</div>
+          <div class="hero-pill" style="border-color:rgba(248,113,113,0.4);color:var(--t1)">Tier 1 · Brutal</div>
+        </div>
+        <div class="anim-item hero-stat">
+          <strong>21</strong> DS&amp;A Patterns · <strong>20</strong> System Design Patterns · <strong>~2–3 months</strong> full-time to master all
+        </div>
+        <div class="anim-item" style="margin-top:18px;font-size:13px;color:var(--muted)">← → Arrow keys to navigate · Space = next</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 1: OVERVIEW -->
+  <div class="slide" id="slide-1">
+    <div class="slide-inner">
+      <div class="slide-title">Tier Overview</div>
+      <div class="slide-subtitle">Full map — 6 tiers, 41 patterns, ordered easy → brutal</div>
+      <div class="overview-grid">
+
+        <div class="anim-item overview-card" style="background:rgba(52,211,153,0.05);border-color:rgba(52,211,153,0.3)">
+          <div class="overview-emoji">✅</div>
+          <div class="overview-tier" style="color:var(--t6)">Tier 6</div>
+          <div class="overview-label">Easy</div>
+          <div class="overview-count">8 patterns</div>
+          <div class="overview-time" style="background:rgba(52,211,153,0.15);color:var(--t6)">1–2 days</div>
+          <div class="overview-names">Two Pointers · Prefix Sum · HashMap/HashSet<br>Bit Manipulation · URL Shortener · API Design<br>CDN/Load Balancer · Caching Strategies</div>
+        </div>
+
+        <div class="anim-item overview-card" style="background:rgba(163,230,53,0.05);border-color:rgba(163,230,53,0.3)">
+          <div class="overview-emoji">🟢</div>
+          <div class="overview-tier" style="color:var(--t5)">Tier 5</div>
+          <div class="overview-label">Medium-Easy</div>
+          <div class="overview-count">7 patterns</div>
+          <div class="overview-time" style="background:rgba(163,230,53,0.15);color:var(--t5)">2–4 days</div>
+          <div class="overview-names">Sliding Window · Binary Search Variants<br>Trees BFS · Linked List · Intervals<br>Rate Limiting · Database Replication</div>
+        </div>
+
+        <div class="anim-item overview-card" style="background:rgba(96,165,250,0.05);border-color:rgba(96,165,250,0.3)">
+          <div class="overview-emoji">🔵</div>
+          <div class="overview-tier" style="color:var(--t4)">Tier 4</div>
+          <div class="overview-label">Medium</div>
+          <div class="overview-count">7 patterns</div>
+          <div class="overview-time" style="background:rgba(96,165,250,0.15);color:var(--t4)">3–5 days</div>
+          <div class="overview-names">Sliding Window Variable · Binary Search on Answer<br>Graph BFS · Trees DFS Advanced · Greedy<br>YouTube/Streaming · Cassandra Data Modeling</div>
+        </div>
+
+        <div class="anim-item overview-card" style="background:rgba(251,191,36,0.05);border-color:rgba(251,191,36,0.3)">
+          <div class="overview-emoji">🟡</div>
+          <div class="overview-tier" style="color:var(--t3)">Tier 3</div>
+          <div class="overview-label">Medium-Hard</div>
+          <div class="overview-count">7 patterns</div>
+          <div class="overview-time" style="background:rgba(251,191,36,0.15);color:var(--t3)">4–7 days</div>
+          <div class="overview-names">Trie · Monotonic Stack · Trees DFS Advanced II<br>Chat System/WhatsApp · Distributed Search/Typeahead<br>Uber/Proximity · Google Drive/File Sync</div>
+        </div>
+
+        <div class="anim-item overview-card" style="background:rgba(244,114,182,0.05);border-color:rgba(244,114,182,0.3)">
+          <div class="overview-emoji">🔴</div>
+          <div class="overview-tier" style="color:var(--t2)">Tier 2</div>
+          <div class="overview-label">Hard</div>
+          <div class="overview-count">7 patterns</div>
+          <div class="overview-time" style="background:rgba(244,114,182,0.15);color:var(--t2)">1–2 weeks</div>
+          <div class="overview-names">DynamoDB Single-Table · Topological Sort · Union-Find<br>Database Sharding · Heap Advanced<br>Twitter/News Feed · Web Crawler</div>
+        </div>
+
+        <div class="anim-item overview-card" style="background:rgba(248,113,113,0.05);border-color:rgba(248,113,113,0.3)">
+          <div class="overview-emoji">☠️</div>
+          <div class="overview-tier" style="color:var(--t1)">Tier 1</div>
+          <div class="overview-label">Brutal</div>
+          <div class="overview-count">6 patterns</div>
+          <div class="overview-time" style="background:rgba(248,113,113,0.15);color:var(--t1)">2–3 weeks</div>
+          <div class="overview-names">Consistent Hashing + Distributed KV<br>CAP Theorem + Consistency Models · Graph Advanced<br>Backtracking + Pruning · LSM/B-Tree Internals<br>Distributed Consensus (Raft/Paxos)</div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 2: TIER 6 -->
+  <div class="slide t6" id="slide-2">
+    <div class="slide-inner">
+      <div class="anim-item tier-header">
+        <div class="tier-badge">T6</div>
+        <div class="tier-info">
+          <h2>✅ Easy — Start Here</h2>
+          <p>You likely know 80% of this already. Blast through in 1–2 days. If anything takes &gt;2h → it was misclassified for you.</p>
+        </div>
+        <div class="tier-time">⏱ 1–2 days total</div>
+      </div>
+      <div class="patterns-grid">
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#1</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Two Pointers</div>
+          <div class="pattern-what">Use two indices moving toward each other or in the same direction to reduce O(n²) brute force to O(n).</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Works on sorted arrays/strings. One pointer from each end, or both from the left at different speeds. Never nested loops if you can use this.</div>
+          <div class="pattern-example">Examples: <span>Two Sum (sorted), Valid Palindrome, Container With Most Water, 3Sum, Remove Duplicates</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#2</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Prefix Sum</div>
+          <div class="pattern-what">Precompute cumulative sums so any range query [i,j] answers in O(1) instead of O(n).</div>
+          <div class="pattern-key"><strong>Key insight:</strong> rangeSum(i,j) = prefix[j+1] − prefix[i]. Build prefix array once, query forever. Also works for 2D grids.</div>
+          <div class="pattern-example">Examples: <span>Subarray Sum Equals K, Range Sum Query, Product Array, Running Sum</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#3</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">HashMap / HashSet</div>
+          <div class="pattern-what">Trade O(n) space for O(1) average lookup, insert, and existence checks. The universal "seen before?" tool.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Anytime you catch yourself writing a nested loop to check "have I seen this?", you need a HashMap. Complements Two Pointers and Sliding Window.</div>
+          <div class="pattern-example">Examples: <span>Two Sum, Group Anagrams, Top K Frequent, LRU Cache, Longest Consecutive Sequence</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#4</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Bit Manipulation</div>
+          <div class="pattern-what">Use bitwise operations (XOR, AND, OR, shifts) to solve problems with O(1) space and no extra data structures.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> XOR of a number with itself = 0. XOR with 0 = itself. a &amp; (a-1) clears the lowest set bit. n &amp; 1 checks odd/even. Fixed set of ~10 tricks covers everything.</div>
+          <div class="pattern-example">Examples: <span>Single Number, Missing Number, Number of 1 Bits, Power of Two, Reverse Bits</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#5</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">URL Shortener</div>
+          <div class="pattern-what">Map long URLs to short codes. Two approaches: hash (MD5/SHA-256 → take first 7 chars, handle collisions) or counter + base62 encode.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Counter + base62 is simpler and collision-free. 301 (permanent) vs 302 (temporary) redirect matters for SEO and caching. Cache hot URLs in Redis with TTL.</div>
+          <div class="pattern-example">System deep-dives: <span>301 vs 302 tradeoff · Distributed counter (Snowflake ID) · Read-heavy → cache aggressively</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#6</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">API Design</div>
+          <div class="pattern-what">Choose and design the right communication protocol: REST, gRPC, WebSocket, or GraphQL based on the use case.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> REST = stateless CRUD. gRPC = low-latency internal microservices (binary, streaming). WebSocket = bidirectional real-time (chat, gaming). GraphQL = flexible queries (mobile clients).</div>
+          <div class="pattern-example">Apply to: <span>All SD problems — always define API before drawing boxes</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#7</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">CDN &amp; Load Balancing</div>
+          <div class="pattern-what">CDN caches static content at edge nodes close to users. Load balancers distribute traffic across server pools.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Push CDN (you control what's cached) vs Pull CDN (cache on first request). L4 LB = TCP level, fast. L7 LB = HTTP level, smart routing. Algorithms: round-robin, least connections, IP hash (sticky sessions).</div>
+          <div class="pattern-example">Apply to: <span>YouTube, Twitter, any read-heavy system with global users</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#8</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Caching Strategies</div>
+          <div class="pattern-what">Store frequently accessed data in memory (Redis/Memcached) to reduce latency and DB load.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Cache-aside (app loads cache on miss) = most common. Write-through (write DB+cache together) = strong consistency. LRU eviction = evict least recently used. Always ask: what's the invalidation strategy?</div>
+          <div class="pattern-example">Apply to: <span>Every read-heavy system. Twitter timeline, URL Shortener, session storage, rate limiting counters</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 3: TIER 5 -->
+  <div class="slide t5" id="slide-3">
+    <div class="slide-inner">
+      <div class="anim-item tier-header">
+        <div class="tier-badge">T5</div>
+        <div class="tier-info">
+          <h2>🟢 Medium-Easy — Warm Up</h2>
+          <p>Patterns you know conceptually but need to drill. Some variants will surprise you. Spend 2–4 days here.</p>
+        </div>
+        <div class="tier-time">⏱ 2–4 days total</div>
+      </div>
+      <div class="patterns-grid">
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#9</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Sliding Window (Fixed)</div>
+          <div class="pattern-what">Maintain a window of fixed size k, sliding right one element at a time. Update window state by adding right, removing left.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> What you track in the window (sum, max, character counts) is everything. The window itself is trivial — the state management inside is the challenge.</div>
+          <div class="pattern-example">Examples: <span>Max Sum Subarray of Size K, Find All Anagrams, Sliding Window Maximum</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#10</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Binary Search (Standard + Rotated)</div>
+          <div class="pattern-what">O(log n) search in sorted array. Standard, rotated array, find peak element, find minimum in rotated.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Always define your invariant: what does mid being "too small" or "too large" really mean? For rotated: determine which half is sorted, then decide which half to search.</div>
+          <div class="pattern-example">Examples: <span>Binary Search, Search in Rotated Array, Find Peak Element, Search a 2D Matrix, Koko Eating Bananas</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#11</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Trees — BFS (Level Order)</div>
+          <div class="pattern-what">Process a tree level by level using a queue. Capture all nodes at depth d before moving to depth d+1.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Snapshot queue.length at the start of each level — that tells you how many nodes belong to this level. Enables zigzag traversal, right-side view, max width, etc.</div>
+          <div class="pattern-example">Examples: <span>Level Order Traversal, Zigzag Traversal, Right Side View, Max Width, Connect Level-Order Nodes</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#12</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Linked List (Slow/Fast Pointer)</div>
+          <div class="pattern-what">Floyd's algorithm: two pointers at different speeds. Fast (2x) catches up to slow, revealing cycles, midpoints, Nth-from-end.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> If fast and slow meet → cycle exists. When fast hits null → slow is at midpoint. To find nth from end: fast ahead by n steps, then move both at same speed.</div>
+          <div class="pattern-example">Examples: <span>Linked List Cycle, Find Middle, Remove Nth Node From End, Palindrome Linked List, Reorder List</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#13</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Intervals</div>
+          <div class="pattern-what">Problems involving overlapping ranges. Sort by start time, then merge, insert, or count overlaps.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Overlap condition: A.end ≥ B.start (when sorted). Merge: new interval = [min(starts), max(ends)]. For "minimum rooms needed" → sort starts and ends separately, simulate.</div>
+          <div class="pattern-example">Examples: <span>Merge Intervals, Insert Interval, Non-Overlapping Intervals, Meeting Rooms II, Employee Free Time</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#14</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Rate Limiting</div>
+          <div class="pattern-what">Control how many requests a client can make in a time window. Protect services from abuse and overload.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Token Bucket (smooth bursts, most common). Sliding Window Log (precise, memory heavy). Fixed Window (simple, edge cases at window boundary). Redis INCR + EXPIRE = simplest distributed implementation.</div>
+          <div class="pattern-example">System deep-dives: <span>Where to enforce (gateway vs service) · Distributed rate limiting across nodes · Client fingerprinting (IP, user ID, API key)</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#15</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Database Replication</div>
+          <div class="pattern-what">Copy data to multiple nodes to improve read performance and availability. Leader-follower (primary-replica) is the standard model.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Sync replication = strong consistency, higher latency. Async replication = faster writes, risk of data loss on failover. Read from replicas = eventual consistency (replication lag). Multi-leader = conflict resolution needed.</div>
+          <div class="pattern-example">Apply to: <span>Any high-read system. PostgreSQL streaming replication, MySQL binlog, MongoDB replica sets</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 4: TIER 4 -->
+  <div class="slide t4" id="slide-4">
+    <div class="slide-inner">
+      <div class="anim-item tier-header">
+        <div class="tier-badge">T4</div>
+        <div class="tier-info">
+          <h2>🔵 Medium — The Real Foundation</h2>
+          <p>This tier takes the longest relative to "assumed knowledge". Patterns that look familiar but have non-obvious variants. 3–5 days.</p>
+        </div>
+        <div class="tier-time">⏱ 3–5 days total</div>
+      </div>
+      <div class="patterns-grid">
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#16</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Sliding Window (Variable)</div>
+          <div class="pattern-what">Window size changes dynamically: expand right when constraint is satisfied, shrink from left when violated. Maximizes/minimizes window under a constraint.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Template: expand right unconditionally. When constraint is violated → shrink left until valid. Track state with a hashmap or counter. The "when to shrink" condition is the only thing that changes per problem.</div>
+          <div class="pattern-example">Examples: <span>Longest Substring Without Repeating, Min Window Substring, Longest Subarray Sum ≤ K, Fruit Into Baskets</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#17</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Binary Search on Answer</div>
+          <div class="pattern-what">Don't search in the input array — search in the answer space. Binary search on what the answer could be, then verify with a helper function.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> If the problem asks "what's the minimum X such that Y is possible?" → binary search on X. Helper function: "can we achieve X?" returns true/false. This transforms many hard problems into medium.</div>
+          <div class="pattern-example">Examples: <span>Koko Eating Bananas, Capacity to Ship Packages, Split Array Largest Sum, Find Minimum in Rotated (answer variant)</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#18</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Graph — BFS (Shortest Path)</div>
+          <div class="pattern-what">BFS finds the shortest path in unweighted graphs. Multi-source BFS starts from multiple nodes simultaneously. 0-1 BFS uses a deque for edge weights of 0 or 1.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Always use a visited set — without it BFS loops infinitely. Multi-source: add all sources to queue at the start (level 0). 0-1 BFS: push front for 0-weight edges, push back for 1-weight edges.</div>
+          <div class="pattern-example">Examples: <span>Word Ladder, Rotting Oranges, Shortest Path in Binary Matrix, 0-1 Matrix, Walls and Gates</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#19</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Trees — DFS (Core)</div>
+          <div class="pattern-what">Recursive traversal passing information down (parameters) and collecting information up (return values) through the tree.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Down = constraints/state from root. Up = aggregated result from subtrees. For "max path sum through any node": each node returns best single path, but tracks global max using left + current + right locally.</div>
+          <div class="pattern-example">Examples: <span>Max Depth, Same Tree, Invert Tree, Path Sum II, Max Path Sum, Validate BST, Diameter of Binary Tree</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#20</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Greedy</div>
+          <div class="pattern-what">At each step, pick the locally optimal choice. Works when local optimality leads to global optimality — but you must prove it (or at least convince yourself).</div>
+          <div class="pattern-key"><strong>Key insight:</strong> The hard part is knowing WHEN greedy is valid. Use exchange argument: "if I swap my greedy choice with any other choice, can it ever be better?" If no → greedy is correct. Common patterns: sort by one dimension, pick max/min greedily.</div>
+          <div class="pattern-example">Examples: <span>Jump Game, Gas Station, Assign Cookies, Task Scheduler, Non-Overlapping Intervals, Partition Labels</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#21</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">YouTube / Video Streaming</div>
+          <div class="pattern-what">Large file upload → transcoding pipeline → CDN distribution. The key challenge is the video processing pipeline and adaptive streaming.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Upload to S3 → trigger transcoding workers (encode to multiple resolutions/formats) → store in S3 → serve via CDN. HLS/DASH = adaptive bitrate (client switches quality based on bandwidth). Content stored geographically near viewers.</div>
+          <div class="pattern-example">System deep-dives: <span>Pre-signed S3 uploads · Transcoding with FFmpeg workers · Thumbnail generation · View count (Redis counter → async write)</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#22</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Cassandra Data Modeling</div>
+          <div class="pattern-what">Design tables around query patterns, not relationships. In Cassandra, you denormalize by design — duplicate data to make reads fast.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Partition key = which node holds the data (must distribute evenly, must be in your WHERE clause). Clustering key = sort order within partition. Design one table per query. Never do full table scans — always query by partition key.</div>
+          <div class="pattern-example">Apply to: <span>Chat history (user_id + timestamp), IoT sensor data, time-series, leaderboards, activity feeds</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 5: TIER 3 -->
+  <div class="slide t3" id="slide-5">
+    <div class="slide-inner">
+      <div class="anim-item tier-header">
+        <div class="tier-badge">T3</div>
+        <div class="tier-info">
+          <h2>🟡 Medium-Hard — Requires Real Effort</h2>
+          <p>These won't click on first read. Need multiple passes + implementation. Plan for 4–7 days across this tier.</p>
+        </div>
+        <div class="tier-time">⏱ 4–7 days total</div>
+      </div>
+      <div class="patterns-grid">
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#23</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Trie (Prefix Tree)</div>
+          <div class="pattern-what">Tree where each node represents one character. All words sharing a prefix share the same path from root. O(m) insert/search where m = word length.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Each TrieNode has children[26] (or HashMap) + isEndOfWord flag. Variants: wildcard search (DFS on '.' nodes), XOR trie for max XOR (insert binary representation), compressed trie for space efficiency.</div>
+          <div class="pattern-example">Examples: <span>Implement Trie, Word Search II, Design Add Search Words, Replace Words, Maximum XOR of Two Numbers</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#24</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Monotonic Stack</div>
+          <div class="pattern-what">Stack that maintains a strictly increasing or decreasing order of elements. Pops elements that violate the ordering to find next greater/smaller.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> When you pop an element, the current element is its "next greater" (or smaller). Maintain indices, not values. For circular arrays: process 2n elements with index mod n. Hardest part: recognizing the problem needs this at all.</div>
+          <div class="pattern-example">Examples: <span>Next Greater Element, Daily Temperatures, Largest Rectangle in Histogram, Trapping Rain Water, Sum of Subarray Minimums</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#25</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Trees DFS — Advanced (LCA, Tree DP)</div>
+          <div class="pattern-what">Lowest Common Ancestor, tree diameter, binary lifting for fast LCA, tree DP (solve subproblems at each subtree). Requires composing results from children.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> LCA: a node is LCA if one target in left subtree and one in right (or node is itself a target). Tree DP: define what each subtree "returns" — often (maxDepth, hasAnswer). Binary lifting: precompute 2^k ancestors for O(log n) LCA queries.</div>
+          <div class="pattern-example">Examples: <span>Lowest Common Ancestor, Diameter of Binary Tree, Binary Tree Cameras, House Robber III, Kth Ancestor</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#26</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Chat System / WhatsApp</div>
+          <div class="pattern-what">Real-time bidirectional messaging at scale. Three hard sub-problems: delivery protocol, message persistence, online presence.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> WebSocket = persistent TCP connection for push delivery (not polling). Presence via heartbeat (client pings every 5s, server marks offline after 30s miss). Message storage in Cassandra: partition by (sender, receiver) + cluster by timestamp. Fan-out to group members via message queue.</div>
+          <div class="pattern-example">System deep-dives: <span>Message deduplication (client-side ID) · E2E encryption · Read receipts · Offline message queue · Group chat fan-out</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#27</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Distributed Search / Typeahead</div>
+          <div class="pattern-what">Two distinct problems: full-text search (inverted index) and autocomplete suggestions (Trie or top-k precomputed). Both need to work at massive scale.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Full-text search: Elasticsearch uses inverted index (word → list of document IDs). Typeahead: Trie for prefix matching + top-k results per node (precomputed). Cache suggestions aggressively — same prefix hit millions of times per hour. Update trie async, not on every request.</div>
+          <div class="pattern-example">System deep-dives: <span>Ranking signals (freshness, clicks, personalization) · Fuzzy search (edit distance) · Sharding the index · Typeahead at Google scale</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#28</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Uber / Proximity Service</div>
+          <div class="pattern-what">Find drivers near a rider. Core challenge: efficiently querying nearby entities on a 2D map, updated in real time.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Geohash: encode lat/lng into a base32 string — nearby locations share common prefixes. QuadTree: recursive 2D partitioning, handles uneven density. For real-time: drivers push location every few seconds → update grid cell → query nearby cells. Ride matching via pub/sub (notify drivers in geo-cell).</div>
+          <div class="pattern-example">System deep-dives: <span>Geohash precision levels · Neighboring cell search · ETA calculation (road graph Dijkstra) · Surge pricing triggers</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#29</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Google Drive / File Sync</div>
+          <div class="pattern-what">Reliable cloud file storage with sync across devices. Hard problems: chunking, dedup, delta sync, and conflict resolution.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Chunk files (4MB blocks) + hash each chunk → detect unchanged chunks → only upload changed chunks (delta sync). Dedup: if chunk hash already exists in store, skip upload. Conflict resolution: vector clocks or "last write wins" per file version. Client maintains local metadata DB (SQLite).</div>
+          <div class="pattern-example">System deep-dives: <span>Block server vs metadata server separation · Offline edits sync · Notification service for updates · Versioning with S3 versioning</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 6: TIER 2 -->
+  <div class="slide t2" id="slide-6">
+    <div class="slide-inner">
+      <div class="anim-item tier-header">
+        <div class="tier-badge">T2</div>
+        <div class="tier-info">
+          <h2>🔴 Hard — Fight Through These</h2>
+          <p>Each of these genuinely requires 1–3 days of focused effort. Don't rush — the depth is the point. 1–2 weeks total.</p>
+        </div>
+        <div class="tier-time">⏱ 1–2 weeks total</div>
+      </div>
+      <div class="patterns-grid">
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#30</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">DynamoDB — Single-Table Design</div>
+          <div class="pattern-what">Model all entities from your domain into ONE DynamoDB table. Access patterns drive key design — completely opposite to relational modeling.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Define all access patterns FIRST. Then design PK/SK to answer each. Use prefixes to encode entity type (PK="USER#123", SK="ORDER#456"). GSI (Global Secondary Index) = new PK/SK pair to support additional query patterns. The hardest mindset shift: you cannot do ad-hoc queries — every query must be planned.</div>
+          <div class="pattern-example">System deep-dives: <span>Hot partition avoidance with write sharding · LSI vs GSI tradeoffs · DynamoDB Streams for CDC · Single-table patterns for 1:M, M:M relationships</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#31</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Topological Sort</div>
+          <div class="pattern-what">Linear ordering of nodes in a DAG such that for every directed edge u→v, u comes before v. Two implementations: Kahn's (BFS + in-degree) and DFS-based.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Kahn's: count in-degrees, add 0-in-degree nodes to queue, process and decrement neighbors — if remaining count &gt; 0 at end, there's a cycle. DFS-based: post-order DFS, add to front of result. Both do cycle detection. Real use: build systems, course prerequisites, task scheduling.</div>
+          <div class="pattern-example">Examples: <span>Course Schedule I &amp; II, Alien Dictionary, Sequence Reconstruction, Minimum Height Trees, Find Order</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#32</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Union-Find (Disjoint Set)</div>
+          <div class="pattern-what">Tracks a set of elements partitioned into disjoint subsets. Supports two operations: find (which set?) and union (merge sets). With optimizations: nearly O(1) per operation.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Path compression: when finding root, point all nodes directly to root. Union by rank: always attach smaller tree under larger. Together → amortized O(α(n)) ≈ O(1). Use when: "are these two nodes connected?" or "how many connected components?"</div>
+          <div class="pattern-example">Examples: <span>Number of Connected Components, Redundant Connection, Accounts Merge, Graph Valid Tree, Smallest String With Swaps</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#33</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Database Sharding</div>
+          <div class="pattern-what">Horizontal partitioning: split data across multiple DB nodes by a shard key. Each shard holds a subset of the data.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Shard key choice is everything — bad key = hot spots (all traffic goes to one shard). Good key = uniform distribution. Range-based sharding = easy range queries but uneven load. Hash-based = uniform load but range queries hit all shards. Consistent hashing = node add/remove only moves K/N keys (minimal reshuffling).</div>
+          <div class="pattern-example">System deep-dives: <span>Resharding strategies · Cross-shard joins (denormalize or application layer) · Celeb problem (hot user shards) · MongoDB sharding vs Vitess (MySQL)</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#34</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Heap — Advanced Patterns</div>
+          <div class="pattern-what">Two complementary heaps for median stream. k-way merge. Skyline problem. Scheduling. These go far beyond basic "top K elements".</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Two heaps for median: max-heap (left half) + min-heap (right half). Keep sizes balanced ±1. Top of max-heap and top of min-heap straddle the median. K-way merge: put first element of each list in a min-heap with list pointer — always pop min and advance that list. Skyline: event-based sweep + max-heap.</div>
+          <div class="pattern-example">Examples: <span>Find Median from Data Stream, Merge K Sorted Lists, Ugly Number II, Task Scheduler, The Skyline Problem</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#35</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Twitter / News Feed</div>
+          <div class="pattern-what">Generate a ranked feed of posts from accounts a user follows. Scale challenge: celebrities with millions of followers, real-time freshness, ranking.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Fan-out on write (push): when user posts, write to all followers' feed caches immediately. Fast reads, expensive writes, breaks for celebrities. Fan-out on read (pull): build feed on-demand by fetching from all followees. Expensive reads, cheap writes. Hybrid: push for regular users, pull for celebrity posts at read time. Merge in application layer.</div>
+          <div class="pattern-example">System deep-dives: <span>Redis sorted set for feed cache (score=timestamp) · Ranking signals (recency, engagement) · Feed pagination (cursor-based) · Real-time notifications via WebSocket</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#36</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Web Crawler</div>
+          <div class="pattern-what">Systematically browse the web: start from seed URLs, fetch pages, extract links, add new URLs to frontier, repeat. Scale: billions of pages.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> BFS (breadth-first) for balanced coverage. Bloom filter to check "have I seen this URL?" without storing all URLs in memory. Politeness: per-domain rate limiting + respect robots.txt. URL normalization: lowercase, strip fragments, canonical form. Distributed crawler: partition frontier by domain hash to avoid politeness conflicts.</div>
+          <div class="pattern-example">System deep-dives: <span>Trap detection (infinite URL spaces) · Content dedup (SimHash) · Recrawl priority (freshness vs importance) · URL frontier as priority queue (PageRank score)</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 7: TIER 1 -->
+  <div class="slide t1" id="slide-7">
+    <div class="slide-inner">
+      <div class="anim-item tier-header">
+        <div class="tier-badge">☠️</div>
+        <div class="tier-info">
+          <h2>Tier 1 — Brutal. Don't rush these.</h2>
+          <p>Deep distributed systems theory + the hardest algorithmic patterns. Context from Tiers 2–6 makes these stick. 2–3 weeks total.</p>
+        </div>
+        <div class="tier-time">⏱ 2–3 weeks total</div>
+      </div>
+      <div class="patterns-grid">
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#37</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Consistent Hashing + Distributed KV Store</div>
+          <div class="pattern-what">Distribute data across N nodes with minimal reshuffling when nodes join/leave. The foundation of how Cassandra, DynamoDB, and Redis Cluster work.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Hash ring: map both nodes and keys to a circle. Each key belongs to the first node clockwise. Virtual nodes (each physical node = multiple ring positions) → even distribution. Quorum: R + W &gt; N guarantees overlap (e.g. N=3, R=2, W=2). Gossip protocol: nodes share state with k random peers every T seconds → eventually consistent membership. Vector clocks: track causality for conflict detection (not just timestamps).</div>
+          <div class="pattern-example">System deep-dives: <span>Consistent hashing rehashing vs naive modulo · Sloppy quorum + hinted handoff · Merkle trees for anti-entropy sync · Cassandra vs Dynamo vs Redis Cluster comparison</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#38</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">CAP Theorem + Consistency Models</div>
+          <div class="pattern-what">In a distributed system facing network partition, you must choose: Consistency (all nodes see same data) or Availability (every request gets a response). Both is impossible.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> CP systems (Zookeeper, HBase): sacrifice availability during partition → return error instead of stale data. AP systems (Cassandra, DynamoDB): sacrifice consistency → return possibly stale data. PACELC extends CAP: even without partition, choose latency vs consistency. Consistency spectrum: Strong → Sequential → Causal → Read-your-writes → Eventual. Each step is a different guarantee, not just "strong or weak".</div>
+          <div class="pattern-example">System deep-dives: <span>Why "BASE" complements ACID · Cassandra's tunable consistency (ONE/QUORUM/ALL) · Read-your-writes in social media · Causal consistency in Google Spanner</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#39</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Graph — Advanced Algorithms</div>
+          <div class="pattern-what">Dijkstra (shortest path, non-negative weights), Bellman-Ford (negative weights + cycle detection), Tarjan (SCCs + bridges), Floyd-Warshall (all pairs).</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Dijkstra: greedy approach with min-heap — only correct with non-negative weights. Bellman-Ford: relax all edges V-1 times → handles negative weights, detects negative cycle on Vth pass. Tarjan: DFS + low-link values to find strongly connected components and bridges. Each algorithm solves a distinct problem — knowing which to reach for is half the battle.</div>
+          <div class="pattern-example">Examples: <span>Network Delay Time (Dijkstra), Cheapest Flights Within K Stops (Bellman-Ford), Critical Connections (Tarjan Bridges), Course Schedule SCC</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#40</div>
+          <div class="pattern-type type-dsa">DS&amp;A</div>
+          <div class="pattern-name">Backtracking + Pruning</div>
+          <div class="pattern-what">Explore the entire decision tree recursively, undoing choices when they lead to dead ends. Pruning cuts branches early to avoid exploring impossible states.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Template: choose → explore → unchoose. Three things to define: State (what snapshot of the problem looks like), Choices (options available at each step), Constraint (when to prune). Pruning is everything — without it, backtracking = brute force. Common pruning: sort + skip duplicates, check constraint before recursing, track remaining budget.</div>
+          <div class="pattern-example">Examples: <span>Subsets I &amp; II, Permutations, Combination Sum, N-Queens, Sudoku Solver, Palindrome Partitioning, Word Search</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#41</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">LSM Tree vs B-Tree Internals</div>
+          <div class="pattern-what">The two dominant storage engine data structures. Understanding them explains why certain databases are write-optimized (Cassandra, RocksDB) vs read-optimized (PostgreSQL, MySQL).</div>
+          <div class="pattern-key"><strong>Key insight:</strong> B-Tree: balanced tree, in-place updates, O(log n) read/write, page-based storage. PostgreSQL uses this. Good for mixed read/write workloads. LSM (Log-Structured Merge): writes go to in-memory MemTable → flushed as immutable SSTables → background compaction merges. Write amplification is lower (sequential writes), read amplification is higher (check multiple levels). Cassandra, RocksDB, LevelDB all use LSM. Bloom filters on SSTables reduce read overhead.</div>
+          <div class="pattern-example">System deep-dives: <span>Write amplification vs read amplification tradeoff · WAL (Write-Ahead Log) in both · Compaction strategies (size-tiered, leveled) · Why MongoDB moved from MMAPv1 to WiredTiger (B-tree)</span></div>
+        </div>
+
+        <div class="anim-item pattern-card">
+          <div class="pattern-num">#42</div>
+          <div class="pattern-type type-sd">System Design</div>
+          <div class="pattern-name">Distributed Consensus (Raft / Paxos)</div>
+          <div class="pattern-what">How a cluster of nodes agrees on a single value despite failures. The algorithm that makes distributed databases consistent and fault-tolerant.</div>
+          <div class="pattern-key"><strong>Key insight:</strong> Raft: leader election (highest term wins), log replication (leader sends entries to majority), commit (applied after majority ack). Split-brain prevention: only ONE leader per term, and a node only votes once per term. Leader lease: leader holds authority for a duration, doesn't need constant re-election. Why this matters: etcd uses Raft, CockroachDB uses Raft per range, Kafka (KRaft mode) replaced ZooKeeper with Raft.</div>
+          <div class="pattern-example">System deep-dives: <span>Leader election timeout randomization · Log compaction (snapshots) · Raft vs Paxos complexity · ZooKeeper ZAB vs Raft · Why Paxos is hard to implement correctly</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 8: YOUR ATTACK ORDER -->
+  <div class="slide" id="slide-8">
+    <div class="slide-inner">
+      <div class="slide-title">Your Personal Attack Order</div>
+      <div class="slide-subtitle">Personalized for: strong engineer + DP expert + Redis/PostgreSQL/Kafka experience — targeting L5 FAANG</div>
+
+      <div class="week-cards">
+
+        <div class="anim-item week-card" style="border-color:rgba(52,211,153,0.35)">
+          <div class="week-label" style="color:var(--t6)">Days 1–2</div>
+          <div class="week-title" style="color:var(--t6)">Tier 6 — Speed Run</div>
+          <ul class="week-items">
+            <li><span class="dot" style="background:var(--t6)"></span><strong>Confirm</strong> Two Pointers, Prefix Sum, HashMap (you know these)</li>
+            <li><span class="dot" style="background:var(--t6)"></span><strong>Formalize</strong> Caching strategies, CDN/LB concepts</li>
+            <li><span class="dot" style="background:var(--t6)"></span><strong>Drill</strong> URL Shortener design — draw it without notes</li>
+            <li><span class="dot" style="background:var(--t6)"></span>If anything takes &gt;2h → log it as a hidden gap</li>
+          </ul>
+        </div>
+
+        <div class="anim-item week-card" style="border-color:rgba(163,230,53,0.35)">
+          <div class="week-label" style="color:var(--t5)">Days 3–6</div>
+          <div class="week-title" style="color:var(--t5)">Tier 5 — Warm Up</div>
+          <ul class="week-items">
+            <li><span class="dot" style="background:var(--t5)"></span><strong>Drill</strong> Variable Sliding Window (likely your gap)</li>
+            <li><span class="dot" style="background:var(--t5)"></span><strong>Nail</strong> Binary Search on Rotated Array + Peak</li>
+            <li><span class="dot" style="background:var(--t5)"></span><strong>Implement</strong> Rate limiter (Token Bucket in Python)</li>
+            <li><span class="dot" style="background:var(--t5)"></span>Trees BFS, Linked List slow/fast — 1 day total</li>
+          </ul>
+        </div>
+
+        <div class="anim-item week-card" style="border-color:rgba(96,165,250,0.35)">
+          <div class="week-label" style="color:var(--t4)">Days 7–12</div>
+          <div class="week-title" style="color:var(--t4)">Tier 4 — Real Foundation</div>
+          <ul class="week-items">
+            <li><span class="dot" style="background:var(--t4)"></span><strong>Master</strong> Graph BFS (multi-source, 0-1 BFS)</li>
+            <li><span class="dot" style="background:var(--t4)"></span><strong>Deep-dive</strong> Greedy (prove exchange arguments)</li>
+            <li><span class="dot" style="background:var(--t4)"></span><strong>Design</strong> YouTube system end-to-end</li>
+            <li><span class="dot" style="background:var(--t4)"></span><strong>Model</strong> 2 Cassandra schemas from scratch</li>
+          </ul>
+        </div>
+
+        <div class="anim-item week-card" style="border-color:rgba(251,191,36,0.35)">
+          <div class="week-label" style="color:var(--t3)">Days 13–20</div>
+          <div class="week-title" style="color:var(--t3)">Tier 3 — Fight Hard</div>
+          <ul class="week-items">
+            <li><span class="dot" style="background:var(--t3)"></span><strong>Implement</strong> Trie from scratch + wildcard search</li>
+            <li><span class="dot" style="background:var(--t3)"></span><strong>Drill</strong> Monotonic Stack (5+ problems)</li>
+            <li><span class="dot" style="background:var(--t3)"></span><strong>Design</strong> Chat + Uber + Google Drive (one per day)</li>
+            <li><span class="dot" style="background:var(--t3)"></span>Ask me to mock-interview you on each design</li>
+          </ul>
+        </div>
+
+        <div class="anim-item week-card" style="border-color:rgba(244,114,182,0.35)">
+          <div class="week-label" style="color:var(--t2)">Days 21–30</div>
+          <div class="week-title" style="color:var(--t2)">Tier 2 — Depth Phase</div>
+          <ul class="week-items">
+            <li><span class="dot" style="background:var(--t2)"></span><strong>Unlearn SQL</strong> — DynamoDB single-table design</li>
+            <li><span class="dot" style="background:var(--t2)"></span><strong>Implement</strong> Union-Find + Topological Sort</li>
+            <li><span class="dot" style="background:var(--t2)"></span><strong>Design</strong> Twitter Feed + Web Crawler</li>
+            <li><span class="dot" style="background:var(--t2)"></span>DB sharding deep-dive (consistent hashing preview)</li>
+          </ul>
+        </div>
+
+        <div class="anim-item week-card" style="border-color:rgba(248,113,113,0.35)">
+          <div class="week-label" style="color:var(--t1)">Week 5–6</div>
+          <div class="week-title" style="color:var(--t1)">Tier 1 — Brutal + Mocks</div>
+          <ul class="week-items">
+            <li><span class="dot" style="background:var(--t1)"></span><strong>Internalize</strong> CAP + consistency spectrum fully</li>
+            <li><span class="dot" style="background:var(--t1)"></span><strong>Deep-dive</strong> Consistent Hashing + Raft basics</li>
+            <li><span class="dot" style="background:var(--t1)"></span><strong>LSM vs B-Tree</strong> — explain from memory</li>
+            <li><span class="dot" style="background:var(--t1)"></span>Daily mock interviews (alternate DS&amp;A + SD)</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="anim-item note-box" style="margin-top:20px">
+        <strong>Core principle:</strong> After every topic — explain it back to me without notes. If you can't explain it simply, you haven't learned it yet. Implementation cements understanding. Mock interviews reveal gaps you didn't know you had. Don't move on until you can teach it.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ SLIDE 9: FULL TABLE HARDEST → EASIEST -->
+  <div class="slide" id="slide-9">
+    <div class="slide-inner">
+      <div class="slide-title">All 41 Patterns — Hardest → Easiest</div>
+      <div class="slide-subtitle">Calibrated to your profile: DP expert, strong distributed systems, targets L5 FAANG</div>
+
+      <!-- TIER 1 -->
+      <div class="anim-item" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="background:rgba(248,113,113,0.15);color:var(--t1);font-weight:900;font-size:13px;padding:4px 12px;border-radius:20px">☠️ Tier 1 — Brutal (weeks to internalize)</span>
+        </div>
+        <table class="tier-table t1-table">
+          <thead><tr><th>#</th><th>Pattern</th><th>Why Hard</th></tr></thead>
+          <tbody>
+            <tr><td>1</td><td><strong>Consistent Hashing + Distributed KV internals</strong></td><td>Vector clocks, quorum, gossip — deeply abstract</td></tr>
+            <tr><td>2</td><td><strong>CAP Theorem + Consistency Models</strong></td><td>Eventual vs strong vs causal — subtle tradeoffs, easy to be wrong</td></tr>
+            <tr class="you-row"><td>3</td><td><strong>DP (multi-dim, state machine variants)</strong></td><td>✅ You're at 95 — this is <em>done</em> for you</td></tr>
+            <tr><td>4</td><td><strong>Graph: Advanced</strong> (Dijkstra, Bellman-Ford, SCC, cycle detection)</td><td>Many algorithms, each with edge case traps</td></tr>
+            <tr><td>5</td><td><strong>Backtracking + Pruning</strong></td><td>State space explosion, pruning logic is non-obvious</td></tr>
+            <tr><td>6</td><td><strong>LSM Tree / B-Tree internals</strong> (Cassandra/RocksDB)</td><td>Requires CS internals most engineers skip</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIER 2 -->
+      <div class="anim-item" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="background:rgba(244,114,182,0.15);color:var(--t2);font-weight:900;font-size:13px;padding:4px 12px;border-radius:20px">🔴 Tier 2 — Hard (several days each)</span>
+        </div>
+        <table class="tier-table t2-table">
+          <thead><tr><th>#</th><th>Pattern</th><th>Why Hard</th></tr></thead>
+          <tbody>
+            <tr><td>7</td><td><strong>DynamoDB Single-Table Design</strong></td><td>Requires <em>unlearning</em> relational thinking</td></tr>
+            <tr><td>8</td><td><strong>Topological Sort</strong></td><td>DAG reasoning + Kahn's vs DFS-based — non-intuitive</td></tr>
+            <tr><td>9</td><td><strong>Union-Find</strong> (path compression, union by rank)</td><td>The "why it works" is mathematically subtle</td></tr>
+            <tr><td>10</td><td><strong>Database Sharding</strong> (shard key design, hot spots, resharding)</td><td>Many failure modes, tradeoffs are deep</td></tr>
+            <tr><td>11</td><td><strong>Heap: Advanced</strong> (merge k sorted, skyline, median stream)</td><td>Knowing when to use two heaps — not obvious</td></tr>
+            <tr><td>12</td><td><strong>Twitter/News Feed</strong> (fan-out on write vs read, hybrid)</td><td>Multiple valid architectures, tradeoffs are nuanced</td></tr>
+            <tr><td>13</td><td><strong>Web Crawler at Scale</strong> (politeness, dedup, BFS vs DFS)</td><td>Many subtleties: Bloom filters, URL normalization, trap avoidance</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIER 3 -->
+      <div class="anim-item" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="background:rgba(251,191,36,0.15);color:var(--t3);font-weight:900;font-size:13px;padding:4px 12px;border-radius:20px">🟡 Tier 3 — Medium-Hard (2–4 days each)</span>
+        </div>
+        <table class="tier-table t3-table">
+          <thead><tr><th>#</th><th>Pattern</th><th>Why Medium-Hard</th></tr></thead>
+          <tbody>
+            <tr><td>14</td><td><strong>Trie</strong></td><td>Implementation ok, but variants (prefix wildcard, XOR trie) are tricky</td></tr>
+            <tr><td>15</td><td><strong>Monotonic Stack</strong></td><td>Recognizing <em>when</em> to use it is not obvious at all</td></tr>
+            <tr><td>16</td><td><strong>Trees: DFS Advanced</strong> (path sum, LCA, serialize/deserialize)</td><td>Recursive thinking + edge cases</td></tr>
+            <tr><td>17</td><td><strong>Chat System / WhatsApp</strong></td><td>WebSocket + presence + Cassandra schema — 3 hard topics combined</td></tr>
+            <tr><td>18</td><td><strong>Distributed Search / Typeahead</strong></td><td>Elasticsearch internals + Trie at scale + ranking</td></tr>
+            <tr><td>19</td><td><strong>Uber / Proximity</strong> (Geohash vs QuadTree)</td><td>Spatial indexing internals are unfamiliar territory</td></tr>
+            <tr><td>20</td><td><strong>Google Drive / File Sync</strong> (chunking, delta sync, conflict resolution)</td><td>Conflict resolution is deeply tricky</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIER 4 -->
+      <div class="anim-item" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="background:rgba(96,165,250,0.15);color:var(--t4);font-weight:900;font-size:13px;padding:4px 12px;border-radius:20px">🔵 Tier 4 — Medium (1–2 days each)</span>
+        </div>
+        <table class="tier-table t4-table">
+          <thead><tr><th>#</th><th>Pattern</th><th>Why Medium</th></tr></thead>
+          <tbody>
+            <tr><td>21</td><td><strong>Sliding Window</strong> (variable window recognition)</td><td>Pattern is clear, but variable window variants need reps</td></tr>
+            <tr><td>22</td><td><strong>Binary Search Variants</strong> (rotated array, find peak, on answer)</td><td>The "search on the answer" variant is unintuitive</td></tr>
+            <tr><td>23</td><td><strong>Graph: BFS</strong> (multi-source, 0-1 BFS)</td><td>Mostly mechanical once understood</td></tr>
+            <tr><td>24</td><td><strong>YouTube / Video Streaming</strong> (transcoding pipeline, HLS/DASH)</td><td>Domain knowledge needed, not pure CS</td></tr>
+            <tr><td>25</td><td><strong>Greedy</strong></td><td>Easy to apply wrong — knowing <em>when</em> greedy is valid is the hard part</td></tr>
+            <tr><td>26</td><td><strong>Cassandra Data Modeling</strong></td><td>Partition key design requires practice</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIER 5 -->
+      <div class="anim-item" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="background:rgba(163,230,53,0.15);color:var(--t5);font-weight:900;font-size:13px;padding:4px 12px;border-radius:20px">🟢 Tier 5 — Medium-Easy (hours to 1 day)</span>
+        </div>
+        <table class="tier-table t5-table">
+          <thead><tr><th>#</th><th>Pattern</th><th>Why Medium-Easy</th></tr></thead>
+          <tbody>
+            <tr><td>27</td><td><strong>Intervals</strong> (merge, insert, non-overlapping)</td><td>Few patterns, clear once seen</td></tr>
+            <tr><td>28</td><td><strong>Linked List</strong> (slow/fast pointer, reversal, cycle)</td><td>Mechanical once patterns learned</td></tr>
+            <tr><td>29</td><td><strong>Trees: BFS</strong> (level order, zigzag, right view)</td><td>Very mechanical</td></tr>
+            <tr><td>30</td><td><strong>Rate Limiting</strong> (token bucket, sliding window Redis impl)</td><td>Clean, well-scoped problem</td></tr>
+            <tr><td>31</td><td><strong>Database Replication</strong> (leader/follower, multi-leader)</td><td>You half-know this already</td></tr>
+            <tr><td>32</td><td><strong>Notification System</strong></td><td>Mostly architectural knowledge, no deep theory</td></tr>
+            <tr><td>33</td><td><strong>MongoDB Data Modeling</strong></td><td>Embed vs reference — clear tradeoffs</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- TIER 6 -->
+      <div class="anim-item" style="margin-bottom:6px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <span style="background:rgba(52,211,153,0.15);color:var(--t6);font-weight:900;font-size:13px;padding:4px 12px;border-radius:20px">✅ Tier 6 — Easy (pick up quickly)</span>
+        </div>
+        <table class="tier-table t6-table">
+          <thead><tr><th>#</th><th>Pattern</th><th>Why Easy</th></tr></thead>
+          <tbody>
+            <tr><td>34</td><td><strong>Two Pointers</strong></td><td>Very pattern-based, immediately recognizable</td></tr>
+            <tr><td>35</td><td><strong>Prefix Sum</strong></td><td>Completely mechanical</td></tr>
+            <tr><td>36</td><td><strong>HashMap / HashSet</strong></td><td>You already use this instinctively</td></tr>
+            <tr><td>37</td><td><strong>Bit Manipulation</strong></td><td>Small fixed set of tricks</td></tr>
+            <tr><td>38</td><td><strong>URL Shortener</strong></td><td>Clean, well-defined, few tradeoffs</td></tr>
+            <tr><td>39</td><td><strong>API Design</strong> (REST/gRPC/WebSocket)</td><td>You already know this from work</td></tr>
+            <tr><td>40</td><td><strong>CDN / Load Balancing</strong></td><td>Conceptual, no deep theory</td></tr>
+            <tr><td>41</td><td><strong>Caching Strategies</strong> (LRU, eviction, write-through)</td><td>You know Redis — it's just formalizing what you do</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ATTACK ORDER SUMMARY -->
+      <div class="anim-item note-box" style="margin-top:18px">
+        <strong>Your Personal Attack Order:</strong> Skip/fast-track Tier 5–6 (you know most of it). Your real ROI:
+        <ol style="margin-top:8px;padding-left:20px;line-height:2">
+          <li><strong style="color:var(--t1)">Tiers 1–2</strong> — distributed systems theory gaps (consistent hashing, CAP, DynamoDB, sharding)</li>
+          <li><strong style="color:var(--t3)">Tier 3 system designs</strong> — Chat, Uber, Google Drive, Typeahead (the ones you haven't built)</li>
+          <li><strong style="color:var(--t4)">Tier 3–4 DS&amp;A</strong> — Trie, Monotonic Stack, Graph Advanced, Backtracking variants</li>
+        </ol>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- end slides-wrapper -->
+
+<div class="controls">
+  <button class="btn btn-secondary" id="prevBtn" onclick="navigate(-1)" disabled>← Prev</button>
+  <select class="slide-jump" id="slideJump" onchange="goTo(parseInt(this.value))"></select>
+  <span class="key-hint">← → Arrow keys</span>
+  <button class="btn btn-primary" id="nextBtn" onclick="navigate(1)">Next →</button>
+</div>
+
+<script>
+const TOTAL = 10;
+let cur = 0;
+
+function goTo(n) {
+  const from = document.getElementById('slide-' + cur);
+  const to   = document.getElementById('slide-' + n);
+  if (!from || !to || n === cur) return;
+  from.classList.add(n > cur ? 'exit-left' : '');
+  from.classList.remove('active');
+  setTimeout(() => { from.classList.remove('exit-left'); }, 500);
+  to.style.transform = n > cur ? 'translateX(60px)' : 'translateX(-60px)';
+  to.style.opacity = '0';
+  to.classList.add('active');
+  setTimeout(() => { to.style.transform = ''; to.style.opacity = ''; }, 20);
+  cur = n;
+  document.getElementById('progressFill').style.width = ((cur + 1) / TOTAL * 100) + '%';
+  document.getElementById('stepCounter').textContent = (cur + 1) + ' / ' + TOTAL;
+  document.getElementById('prevBtn').disabled = cur === 0;
+  document.getElementById('nextBtn').disabled = cur === TOTAL - 1;
+  document.querySelector('.slides-wrapper').scrollTop = 0;
+}
+
+function navigate(dir) { const n = cur + dir; if (n >= 0 && n < TOTAL) goTo(n); }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); navigate(1); }
+  if (e.key === 'ArrowLeft') navigate(-1);
+});
+
+// Slide jump dropdown
+const jumpSelect = document.getElementById('slideJump');
+const slideTitles = ['Title','Overview','Tier 6 Easy','Tier 5','Tier 4','Tier 3','Tier 2','Tier 1 Brutal','Attack Order','Full Table'];
+for (let i = 0; i < TOTAL; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = (i + 1) + '. ' + (slideTitles[i] || 'Slide ' + (i + 1));
+  jumpSelect.appendChild(opt);
+}
+// Patch goTo to sync dropdown
+const _baseGoTo = goTo;
+goTo = function(n) { _baseGoTo(n); jumpSelect.value = cur; };
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interview Mastery Hub</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --green: #34d399;
+  --orange: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --cyan: #22d3ee;
+  --lime: #a3e635;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family:'Segoe UI',system-ui,-apple-system,sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; display:flex; align-items:center; justify-content:center;
+}
+.hub {
+  max-width:560px; width:100%; padding:40px 24px;
+}
+.hub-title {
+  font-size:42px; font-weight:800; text-align:center; margin-bottom:8px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue),var(--purple));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.hub-sub {
+  text-align:center; color:var(--muted); font-size:16px; margin-bottom:48px;
+}
+.nav-list {
+  display:flex; flex-direction:column; gap:16px;
+}
+.nav-card {
+  display:flex; align-items:center; gap:18px;
+  background:var(--surface); border:1px solid var(--surface2);
+  border-radius:14px; padding:20px 24px;
+  text-decoration:none; color:var(--text);
+  transition:all 0.25s ease;
+  position:relative; overflow:hidden;
+}
+.nav-card::before {
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(135deg, transparent 60%, var(--accent));
+  opacity:0; transition:opacity 0.3s;
+}
+.nav-card:hover::before { opacity:0.08; }
+.nav-card:hover {
+  border-color:var(--accent);
+  transform:translateY(-3px);
+  box-shadow:0 8px 30px rgba(0,0,0,0.3);
+}
+.nav-icon {
+  font-size:36px; min-width:48px; text-align:center;
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+}
+.nav-info { flex:1; }
+.nav-info h2 {
+  font-size:20px; font-weight:700; margin-bottom:4px;
+  transition:color 0.2s;
+}
+.nav-card:hover .nav-info h2 { color:var(--accent); }
+.nav-info p { font-size:13px; color:var(--muted); line-height:1.4; }
+.nav-arrow {
+  font-size:20px; color:var(--muted); transition:transform 0.2s, color 0.2s;
+}
+.nav-card:hover .nav-arrow { transform:translateX(4px); color:var(--accent); }
+
+@keyframes fadeInUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+.nav-card { opacity:0; animation:fadeInUp 0.5s ease forwards; }
+.nav-card:nth-child(1) { animation-delay:0.1s; }
+.nav-card:nth-child(2) { animation-delay:0.2s; }
+.nav-card:nth-child(3) { animation-delay:0.3s; }
+.nav-card:nth-child(4) { animation-delay:0.4s; }
+.nav-card:nth-child(5) { animation-delay:0.5s; }
+
+.footer {
+  text-align:center; margin-top:48px; color:var(--muted); font-size:13px;
+}
+.footer span { color:var(--cyan); font-weight:600; }
+</style>
+</head>
+<body>
+
+<div class="hub">
+  <div class="hub-title" style="opacity:0;animation:fadeInUp 0.5s ease forwards;">Interview Mastery Hub</div>
+  <div class="hub-sub" style="opacity:0;animation:fadeInUp 0.5s ease 0.05s forwards;">5 visual guides — from 0 to 100 — pick a topic and start learning</div>
+
+  <div class="nav-list">
+    <a class="nav-card" href="learning-tiers.html" style="--accent:var(--green);">
+      <div class="nav-icon">⚔️</div>
+      <div class="nav-info">
+        <h2>Learning Tiers</h2>
+        <p>41 patterns ranked Easy → Brutal. Know what to learn first.</p>
+      </div>
+      <div class="nav-arrow">→</div>
+    </a>
+
+    <a class="nav-card" href="leetcode-patterns.html" style="--accent:var(--cyan);">
+      <div class="nav-icon">🧠</div>
+      <div class="nav-info">
+        <h2>LeetCode Patterns</h2>
+        <p>Every DS&A pattern animated — arrays, trees, graphs, DP & more.</p>
+      </div>
+      <div class="nav-arrow">→</div>
+    </a>
+
+    <a class="nav-card" href="system-design.html" style="--accent:var(--purple);">
+      <div class="nav-icon">🏗️</div>
+      <div class="nav-info">
+        <h2>System Design</h2>
+        <p>Load balancers, databases, caching, microservices — the full picture.</p>
+      </div>
+      <div class="nav-arrow">→</div>
+    </a>
+
+    <a class="nav-card" href="cloud-explained.html" style="--accent:var(--orange);">
+      <div class="nav-icon">☁️</div>
+      <div class="nav-info">
+        <h2>Cloud Computing</h2>
+        <p>AWS, GCP, Azure — regions, services, pricing, and architecture.</p>
+      </div>
+      <div class="nav-arrow">→</div>
+    </a>
+
+    <a class="nav-card" href="llm-explained.html" style="--accent:var(--pink);">
+      <div class="nav-icon">🤖</div>
+      <div class="nav-info">
+        <h2>How LLMs Work</h2>
+        <p>Transformers, attention, tokenization, training — demystified visually.</p>
+      </div>
+      <div class="nav-arrow">→</div>
+    </a>
+  </div>
+
+  <div class="footer" style="opacity:0;animation:fadeInUp 0.5s ease 0.6s forwards;">
+    <span>5</span> guides · Use ← → arrows inside each guide to navigate slides
+  </div>
+</div>
+
+</body>
+</html>

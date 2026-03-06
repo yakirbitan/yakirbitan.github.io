@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Design Interviews — From 0 to 100 — Everything Animated</title>
+<style>
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --surface2: #334155;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --blue: #60a5fa;
+  --purple: #a78bfa;
+  --green: #34d399;
+  --orange: #fbbf24;
+  --red: #f87171;
+  --pink: #f472b6;
+  --cyan: #22d3ee;
+  --lime: #a3e635;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  background:rgba(15,23,42,0.95); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--surface2); padding:10px 24px;
+  display:flex; align-items:center; gap:16px;
+}
+.topbar h1 { font-size:15px; color:var(--cyan); white-space:nowrap; }
+.progress-track { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; background:linear-gradient(90deg,var(--cyan),var(--blue),var(--purple),var(--pink)); border-radius:3px; transition:width 0.5s ease; }
+.step-counter { font-size:14px; color:var(--muted); white-space:nowrap; }
+
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:100;
+  background:rgba(15,23,42,0.95); backdrop-filter:blur(10px);
+  border-top:1px solid var(--surface2); padding:12px 24px;
+  display:flex; align-items:center; justify-content:center; gap:16px;
+}
+.btn { padding:8px 24px; border:none; border-radius:8px; font-size:15px; cursor:pointer; transition:all 0.2s; font-weight:600; }
+.btn-primary { background:var(--cyan); color:var(--bg); }
+.btn-primary:hover { background:#67e8f9; transform:translateY(-1px); }
+.btn-secondary { background:var(--surface2); color:var(--text); }
+.btn-secondary:hover { background:#475569; }
+.btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+.key-hint { font-size:12px; color:var(--muted); }
+
+.slides-wrapper {
+  position:fixed; top:82px; bottom:56px; left:0; right:0; overflow-y:auto; overflow-x:hidden;
+}
+.slides-wrapper::-webkit-scrollbar { width:6px; }
+.slides-wrapper::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:3px; }
+.slides-wrapper::before {
+  content:''; position:fixed; top:46px; bottom:56px; left:0; right:0;
+  background-image:radial-gradient(circle,var(--surface2) 1px,transparent 1px);
+  background-size:30px 30px; opacity:0.3; pointer-events:none; z-index:0;
+}
+.slide {
+  position:absolute; inset:0;
+  display:flex; align-items:flex-start; justify-content:center;
+  padding:24px 36px;
+  opacity:0; transform:translateX(60px);
+  transition:opacity 0.5s, transform 0.5s;
+  pointer-events:none; overflow-y:auto; z-index:1;
+}
+.slide.active { opacity:1; transform:translateX(0); pointer-events:auto; }
+.slide.exit-left { opacity:0; transform:translateX(-60px); }
+.slide-inner { max-width:1150px; width:100%; padding-bottom:40px; }
+
+.slide-title {
+  font-size:30px; font-weight:700; margin-bottom:6px;
+  background:linear-gradient(135deg,var(--cyan),var(--blue));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.slide-subtitle { font-size:16px; color:var(--muted); margin-bottom:22px; }
+
+.card { background:var(--surface); border-radius:12px; padding:18px; border:1px solid var(--surface2); margin-bottom:12px; }
+.card-title { font-size:17px; font-weight:700; margin-bottom:6px; }
+.flex-row { display:flex; gap:12px; flex-wrap:wrap; }
+.flex-row > * { flex:1; min-width:260px; }
+
+@keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.anim-item { opacity:0; }
+.slide.active .anim-item { animation:fadeInUp 0.6s ease forwards; }
+.slide.active .anim-item:nth-child(2) { animation-delay:0.12s; }
+.slide.active .anim-item:nth-child(3) { animation-delay:0.24s; }
+.slide.active .anim-item:nth-child(4) { animation-delay:0.36s; }
+.slide.active .anim-item:nth-child(5) { animation-delay:0.48s; }
+.slide.active .anim-item:nth-child(6) { animation-delay:0.6s; }
+.slide.active .anim-item:nth-child(7) { animation-delay:0.72s; }
+.slide.active .anim-item:nth-child(8) { animation-delay:0.84s; }
+.slide.active .anim-item:nth-child(9) { animation-delay:0.96s; }
+.slide.active .anim-item:nth-child(10) { animation-delay:1.08s; }
+.slide.active .anim-item:nth-child(11) { animation-delay:1.2s; }
+.slide.active .anim-item:nth-child(12) { animation-delay:1.32s; }
+
+.key-idea {
+  background:rgba(34,211,238,0.08); border:1px solid rgba(34,211,238,0.3);
+  border-radius:10px; padding:14px 16px; margin-top:10px; margin-bottom:10px;
+  font-size:15px; line-height:1.6;
+}
+.key-idea strong { color:var(--cyan); }
+.badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:12px; font-weight:700; }
+.badge-green { background:rgba(52,211,153,0.2); color:var(--green); }
+.badge-orange { background:rgba(251,191,36,0.2); color:var(--orange); }
+.badge-red { background:rgba(248,113,113,0.2); color:var(--red); }
+.badge-blue { background:rgba(96,165,250,0.2); color:var(--blue); }
+.badge-purple { background:rgba(167,139,250,0.2); color:var(--purple); }
+.prob-tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; background:var(--surface2); color:var(--muted); margin:2px; }
+
+/* Architecture diagram boxes */
+.arch-box {
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:10px 16px; border-radius:8px; font-size:13px; font-weight:700;
+  border:2px solid; text-align:center; min-width:100px;
+}
+.arch-row { display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap; margin:10px 0; }
+.arch-arrow { font-size:20px; color:var(--muted); }
+
+/* Number callouts */
+.num-box {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; border-radius:50%; font-size:14px; font-weight:800;
+  background:var(--cyan); color:var(--bg); margin-right:8px; flex-shrink:0;
+}
+
+/* Comparison table */
+.comp-table { width:100%; border-collapse:collapse; font-size:13px; }
+.comp-table th { padding:8px 10px; text-align:left; font-weight:700; background:var(--surface2); }
+.comp-table td { padding:6px 10px; border-bottom:1px solid var(--surface2); color:var(--muted); }
+.comp-table td:first-child { color:var(--cyan); font-weight:700; }
+
+/* Flow line */
+.flow-line { display:flex; align-items:center; gap:6px; margin:6px 0; font-size:14px; }
+.flow-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+
+.code-block {
+  background:var(--bg); border:1px solid var(--surface2); border-radius:8px;
+  padding:14px; font-family:'Fira Code',monospace; font-size:13px; line-height:1.7;
+  overflow-x:auto; color:var(--green); white-space:pre;
+}
+.kw { color:var(--purple); }
+.fn { color:var(--blue); }
+.cm { color:var(--muted); }
+.st { color:var(--orange); }
+.num { color:var(--cyan); }
+
+/* ─── Guide Nav Bar ─── */
+.guide-nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  background:rgba(15,23,42,0.98); backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--surface2); padding:6px 16px;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+}
+.guide-nav a {
+  padding:5px 14px; border-radius:6px; font-size:12px; font-weight:600;
+  text-decoration:none; color:var(--muted); transition:all 0.2s;
+  border:1px solid transparent; white-space:nowrap;
+}
+.guide-nav a:hover { color:var(--text); background:var(--surface2); }
+.guide-nav a.active { color:var(--cyan); border-color:var(--cyan); background:rgba(34,211,238,0.1); }
+.guide-nav .home-btn { color:var(--text); font-size:14px; margin-right:8px; }
+.guide-nav .home-btn:hover { color:var(--cyan); }
+.slide-jump { padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; background:var(--surface2); color:var(--text); border:1px solid var(--surface2); cursor:pointer; outline:none; }
+.slide-jump:hover, .slide-jump:focus { border-color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="guide-nav">
+  <a href="index.html" class="home-btn" title="Home">🏠</a>
+  <a href="learning-tiers.html">Learning Tiers</a>
+  <a href="leetcode-patterns.html">LeetCode Patterns</a>
+  <a href="system-design.html" class="active">System Design</a>
+  <a href="cloud-explained.html">Cloud Computing</a>
+  <a href="llm-explained.html">How LLMs Work</a>
+</div>
+
+<div class="topbar" style="top:36px;">
+  <h1>🏗️ System Design 0→100</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="step-counter" id="stepCounter">1 / 25</span>
+</div>
+<div class="controls">
+  <button class="btn btn-secondary" id="btnPrev" onclick="prevSlide()">← Back</button>
+  <select class="slide-jump" id="slideJump" onchange="goToSlide(parseInt(this.value))"></select>
+  <span class="key-hint">← → keys</span>
+  <button class="btn btn-primary" id="btnNext" onclick="nextSlide()">Next →</button>
+</div>
+
+<div class="slides-wrapper">
+
+<!-- ═══════════════ SLIDE 0 — TITLE ═══════════════ -->
+<div class="slide active" data-slide="0">
+<div class="slide-inner" style="text-align:center; padding-top:40px;">
+  <div class="anim-item" style="font-size:56px;">🏗️</div>
+  <h1 class="anim-item slide-title" style="font-size:42px;">System Design Interviews<br>From 0 to 100</h1>
+  <p class="anim-item slide-subtitle" style="font-size:18px;">Master the framework + building blocks → Design ANY system at FAANG</p>
+  <div class="anim-item" style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin-top:24px;">
+    <span class="badge badge-green" style="font-size:14px; padding:6px 14px;">45 min interview</span>
+    <span class="badge badge-orange" style="font-size:14px; padding:6px 14px;">Open-ended questions</span>
+    <span class="badge badge-red" style="font-size:14px; padding:6px 14px;">No single correct answer</span>
+  </div>
+  <div class="anim-item" style="margin-top:30px; display:flex; justify-content:center; gap:8px; flex-wrap:wrap; max-width:800px; margin-left:auto; margin-right:auto;">
+    <span class="prob-tag" style="font-size:13px;">Load Balancers</span>
+    <span class="prob-tag" style="font-size:13px;">Caching</span>
+    <span class="prob-tag" style="font-size:13px;">Databases</span>
+    <span class="prob-tag" style="font-size:13px;">Message Queues</span>
+    <span class="prob-tag" style="font-size:13px;">CDN</span>
+    <span class="prob-tag" style="font-size:13px;">Sharding</span>
+    <span class="prob-tag" style="font-size:13px;">Replication</span>
+    <span class="prob-tag" style="font-size:13px;">Consistent Hashing</span>
+    <span class="prob-tag" style="font-size:13px;">Rate Limiting</span>
+    <span class="prob-tag" style="font-size:13px;">CAP Theorem</span>
+    <span class="prob-tag" style="font-size:13px;">API Design</span>
+    <span class="prob-tag" style="font-size:13px;">Microservices</span>
+    <span class="prob-tag" style="font-size:13px;">URL Shortener</span>
+    <span class="prob-tag" style="font-size:13px;">Twitter</span>
+    <span class="prob-tag" style="font-size:13px;">YouTube</span>
+    <span class="prob-tag" style="font-size:13px;">Chat System</span>
+  </div>
+  <p class="anim-item" style="margin-top:24px; color:var(--muted);">Press <strong>Next →</strong> or <strong>→</strong> to begin</p>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 1 — THE FRAMEWORK ═══════════════ -->
+<div class="slide" data-slide="1">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Step 0: The 4-Step Framework 🎯</div>
+  <div class="anim-item slide-subtitle">Use this EXACT structure in EVERY system design interview — interviewers expect it</div>
+
+  <div class="anim-item key-idea">
+    <strong>🧠 The #1 secret:</strong> System design is NOT about memorizing architectures. It's about <em>structured thinking under ambiguity</em>. The interviewer is evaluating HOW you think, not if you know the "right" answer. Drive the conversation. Ask questions. Make tradeoffs explicit.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:14px;">
+      <div class="num-box">1</div>
+      <div>
+        <div class="card-title" style="color:var(--cyan);">Requirements & Scope (5 min)</div>
+        <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+          <strong style="color:var(--text);">Functional:</strong> What exactly does the system do? (e.g., "users can post tweets and follow other users")<br>
+          <strong style="color:var(--text);">Non-functional:</strong> Scale? Latency? Availability? Consistency? (e.g., "100M DAU, < 200ms reads, 99.99% uptime")<br>
+          <strong style="color:var(--text);">Out of scope:</strong> What are we NOT building? (e.g., "no DMs, no analytics for now")
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:14px;">
+      <div class="num-box" style="background:var(--green);">2</div>
+      <div>
+        <div class="card-title" style="color:var(--green);">Capacity Estimation (5 min)</div>
+        <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+          Back-of-envelope math: QPS (queries/sec), storage, bandwidth.<br>
+          <strong style="color:var(--text);">Reads vs Writes?</strong> Read-heavy (100:1) → cache aggressively. Write-heavy (1:1) → focus on write throughput.<br>
+          <strong style="color:var(--text);">Storage:</strong> 100M users × 1KB per record = 100GB. × 5 years = 500GB → fits on one machine? Need sharding?
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:14px;">
+      <div class="num-box" style="background:var(--orange);">3</div>
+      <div>
+        <div class="card-title" style="color:var(--orange);">High-Level Design (15-20 min)</div>
+        <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+          Draw the architecture: clients → load balancer → services → databases.<br>
+          Define APIs. Pick database types. Identify core components. <strong style="color:var(--text);">Keep it simple first.</strong>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex; align-items:flex-start; gap:10px;">
+      <div class="num-box" style="background:var(--purple);">4</div>
+      <div>
+        <div class="card-title" style="color:var(--purple);">Deep Dive + Tradeoffs (15-20 min)</div>
+        <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+          The interviewer will pick 1-2 areas to go deep. Discuss tradeoffs, bottlenecks, how to scale, failure modes.<br>
+          <strong style="color:var(--text);">This is where you shine.</strong> Show depth of knowledge.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 2 — BACK OF ENVELOPE ═══════════════ -->
+<div class="slide" data-slide="2">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Numbers Everyone Should Know 📊</div>
+  <div class="anim-item slide-subtitle">Memorize these — they're used in EVERY capacity estimation</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> You don't need exact numbers. You need ORDER OF MAGNITUDE. Is it 10KB or 10MB? Is it 1,000 QPS or 1,000,000 QPS? That determines whether you need 1 server or 1,000.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Latency Numbers</div>
+      <div style="font-size:13px; line-height:2; color:var(--muted);">
+        <div>L1 cache: <strong style="color:var(--green);">0.5 ns</strong></div>
+        <div>L2 cache: <strong style="color:var(--green);">7 ns</strong></div>
+        <div>RAM access: <strong style="color:var(--green);">100 ns</strong></div>
+        <div>SSD read: <strong style="color:var(--orange);">150 μs</strong></div>
+        <div>HDD seek: <strong style="color:var(--orange);">10 ms</strong></div>
+        <div>Same datacenter round-trip: <strong style="color:var(--orange);">0.5 ms</strong></div>
+        <div>Cross-continent: <strong style="color:var(--red);">150 ms</strong></div>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Power of 2 Cheat Sheet</div>
+      <div style="font-size:13px; line-height:2; color:var(--muted);">
+        <div>2<sup>10</sup> = <strong style="color:var(--text);">1 Thousand</strong> (1 KB)</div>
+        <div>2<sup>20</sup> = <strong style="color:var(--text);">1 Million</strong> (1 MB)</div>
+        <div>2<sup>30</sup> = <strong style="color:var(--text);">1 Billion</strong> (1 GB)</div>
+        <div>2<sup>40</sup> = <strong style="color:var(--text);">1 Trillion</strong> (1 TB)</div>
+      </div>
+      <div style="font-size:13px; line-height:2; color:var(--muted); margin-top:6px; border-top:1px solid var(--surface2); padding-top:6px;">
+        <div>1 day = <strong style="color:var(--text);">86,400 sec ≈ 100K sec</strong></div>
+        <div>1 month ≈ <strong style="color:var(--text);">2.5M sec</strong></div>
+        <div>1 year ≈ <strong style="color:var(--text);">30M sec</strong></div>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Quick QPS Estimation</div>
+      <div style="font-size:13px; line-height:2; color:var(--muted);">
+        <div>100M DAU</div>
+        <div>Each user: 5 requests/day</div>
+        <div>Total = 500M req/day</div>
+        <div>= 500M / 100K sec</div>
+        <div>= <strong style="color:var(--cyan);">~5,000 QPS</strong></div>
+        <div>Peak = 2-3× average</div>
+        <div>= <strong style="color:var(--red);">~15,000 QPS peak</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">Server Capacity Rules of Thumb</div>
+    <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+      <strong style="color:var(--text);">Single web server:</strong> ~1,000 QPS (CPU-bound), ~10,000 QPS (IO-bound with async) &nbsp;|&nbsp;
+      <strong style="color:var(--text);">Redis:</strong> 100K+ ops/sec &nbsp;|&nbsp;
+      <strong style="color:var(--text);">MySQL:</strong> ~1,000 writes/sec, ~10,000 reads/sec &nbsp;|&nbsp;
+      <strong style="color:var(--text);">Kafka:</strong> millions of messages/sec per cluster
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 3 — API DESIGN ═══════════════ -->
+<div class="slide" data-slide="3">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 1: API Design 🔌</div>
+  <div class="anim-item slide-subtitle">Every system starts with its API — how clients talk to it</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Before drawing boxes, define the APIs. This forces you to understand the requirements concretely. REST for CRUD operations, WebSockets for real-time, GraphQL for flexible queries. Always define: endpoint, method, request params, response, and rate limits.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">REST API Example (Twitter)</div>
+      <div class="code-block"><span class="cm"># Create tweet</span>
+POST /api/v1/tweets
+{<span class="st">"content"</span>: <span class="st">"Hello world"</span>, <span class="st">"media_ids"</span>: []}
+→ 201 {<span class="st">"tweet_id"</span>: <span class="st">"abc123"</span>}
+
+<span class="cm"># Get timeline (paginated)</span>
+GET /api/v1/timeline?cursor=xxx&limit=20
+→ 200 {<span class="st">"tweets"</span>: [...], <span class="st">"next_cursor"</span>: <span class="st">"yyy"</span>}
+
+<span class="cm"># Follow user</span>
+POST /api/v1/users/{user_id}/follow
+→ 200</div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Protocol Choices</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">REST</strong> — Standard CRUD. Stateless. Used by 90% of APIs.</p>
+        <p><strong style="color:var(--green);">WebSocket</strong> — Real-time bidirectional. Chat, notifications, live feeds.</p>
+        <p><strong style="color:var(--purple);">gRPC</strong> — Service-to-service. Fast binary protocol. Used internally at Google.</p>
+        <p><strong style="color:var(--pink);">GraphQL</strong> — Client specifies exactly what data it wants. Good for frontend flexibility.</p>
+        <p><strong style="color:var(--orange);">SSE</strong> — Server-sent events. One-way server→client. Simpler than WebSocket for push notifications.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:14px; color:var(--muted);">
+    <strong style="color:var(--text);">🔑 Always mention:</strong> Pagination (cursor-based > offset), rate limiting, authentication (JWT/OAuth), versioning (/v1/), idempotency keys for writes.
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 4 — LOAD BALANCER ═══════════════ -->
+<div class="slide" data-slide="4">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 2: Load Balancers ⚖️</div>
+  <div class="anim-item slide-subtitle">Distribute traffic across multiple servers — the gateway to horizontal scaling</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> A load balancer sits between clients and servers. It distributes incoming requests so no single server gets overwhelmed. It also provides health checks — if a server dies, traffic routes to healthy ones automatically. This is HOW you scale: add more servers behind the LB.
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin:8px 0;">
+    <div class="arch-row">
+      <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1);">👥 Clients</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); padding:14px 24px;">⚖️ Load Balancer</div>
+      <div class="arch-arrow">→</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Server 1</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Server 2</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Server 3</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Algorithms</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--text);">Round Robin:</strong> 1→2→3→1→2→3. Simple, equal distribution.</p>
+        <p><strong style="color:var(--text);">Weighted Round Robin:</strong> More powerful server gets more requests.</p>
+        <p><strong style="color:var(--text);">Least Connections:</strong> Send to server with fewest active connections.</p>
+        <p><strong style="color:var(--text);">IP Hash:</strong> Same client always hits same server (sticky sessions).</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">Layer 4 vs Layer 7</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">L4 (Transport):</strong> Routes based on IP/port. Fast but dumb. (AWS NLB)</p>
+        <p><strong style="color:var(--orange);">L7 (Application):</strong> Routes based on URL, headers, cookies. Smarter, can do path-based routing. (AWS ALB, Nginx)</p>
+        <p style="margin-top:6px;"><strong style="color:var(--text);">In interviews:</strong> say "Layer 7 load balancer" for most web apps.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:14px; color:var(--muted);">
+    <strong style="color:var(--text);">Real-world:</strong> AWS ALB/NLB, Google Cloud LB, Nginx, HAProxy. Also mention DNS-level load balancing for global distribution.
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 5 — DATABASES ═══════════════ -->
+<div class="slide" data-slide="5">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 3: Databases 🗄️</div>
+  <div class="anim-item slide-subtitle">SQL vs NoSQL — the most important choice in system design</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> SQL (relational) = structured data with relationships, ACID guarantees, complex queries. NoSQL = flexible schema, horizontal scaling, high throughput. <strong>Default to SQL unless you have a specific reason for NoSQL.</strong> The reason is always: massive scale, flexible schema, or specific access patterns.
+  </div>
+
+  <div class="anim-item">
+    <table class="comp-table">
+      <tr><th style="width:15%;"></th><th style="width:42%;">SQL (Relational)</th><th style="width:43%;">NoSQL</th></tr>
+      <tr><td>Schema</td><td>Fixed, predefined tables</td><td>Flexible, schema-less</td></tr>
+      <tr><td>Scaling</td><td>Vertical (bigger machine) + read replicas</td><td>Horizontal (add more nodes) natively</td></tr>
+      <tr><td>Consistency</td><td>Strong ACID by default</td><td>Eventual consistency (tunable)</td></tr>
+      <tr><td>Joins</td><td>✅ Complex joins supported</td><td>❌ Denormalize, no joins</td></tr>
+      <tr><td>Best for</td><td>Users, orders, transactions, relationships</td><td>Logs, sessions, real-time, massive scale</td></tr>
+      <tr><td>Examples</td><td>PostgreSQL, MySQL, Aurora</td><td>MongoDB, Cassandra, DynamoDB, Redis</td></tr>
+    </table>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">NoSQL Types (know all 4!)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">Key-Value:</strong> Redis, DynamoDB. Simple get/set by key. Fastest. Caching, sessions.</p>
+        <p><strong style="color:var(--green);">Document:</strong> MongoDB, Couchbase. JSON-like docs. Flexible schema. Product catalogs.</p>
+        <p><strong style="color:var(--purple);">Wide-Column:</strong> Cassandra, HBase. Rows with dynamic columns. Time-series, IoT.</p>
+        <p><strong style="color:var(--pink);">Graph:</strong> Neo4j, Neptune. Nodes + edges. Social networks, recommendations.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--red);">
+      <div class="card-title" style="color:var(--red);">Interview Decision Framework</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p>Need relationships/joins? → <strong style="color:var(--text);">SQL</strong></p>
+        <p>Need ACID transactions? → <strong style="color:var(--text);">SQL</strong></p>
+        <p>Massive writes (100K+/sec)? → <strong style="color:var(--text);">NoSQL (Cassandra)</strong></p>
+        <p>Flexible/evolving schema? → <strong style="color:var(--text);">NoSQL (MongoDB)</strong></p>
+        <p>Simple key-value + ultra fast? → <strong style="color:var(--text);">Redis/DynamoDB</strong></p>
+        <p>Graph-like queries (friends-of-friends)? → <strong style="color:var(--text);">Graph DB</strong></p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 6 — CACHING ═══════════════ -->
+<div class="slide" data-slide="6">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 4: Caching 🏎️</div>
+  <div class="anim-item slide-subtitle">Store frequently accessed data in fast memory — the single biggest performance win</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Cache = fast layer (RAM) in front of a slow layer (DB). If data is in cache (cache hit) → return instantly (~1ms). If not (cache miss) → query DB (~10-100ms), store result in cache for next time. A 90% hit rate means 90% of your reads skip the DB entirely.
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin:8px 0;">
+    <div class="arch-row">
+      <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1);">App Server</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1);">⚡ Cache (Redis)<br><span style="font-size:11px;">~1ms</span></div>
+      <div class="arch-arrow" style="color:var(--red);">miss→</div>
+      <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1);">🗄️ Database<br><span style="font-size:11px;">~50ms</span></div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Caching Strategies</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">Cache-Aside (Lazy):</strong> App checks cache → miss → reads DB → writes to cache. Most common.</p>
+        <p><strong style="color:var(--orange);">Write-Through:</strong> Every write goes to cache AND DB simultaneously. Always consistent but slower writes.</p>
+        <p><strong style="color:var(--purple);">Write-Behind:</strong> Write to cache first, async write to DB. Fast writes but risk of data loss.</p>
+        <p><strong style="color:var(--pink);">Read-Through:</strong> Cache itself fetches from DB on miss. Simpler app code.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--red);">
+      <div class="card-title" style="color:var(--red);">Cache Eviction</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--text);">LRU</strong> (Least Recently Used) — evict oldest-accessed. <strong>Default choice.</strong></p>
+        <p><strong style="color:var(--text);">LFU</strong> (Least Frequently Used) — evict least-used. Better for hot/cold data.</p>
+        <p><strong style="color:var(--text);">TTL</strong> (Time To Live) — expire after N seconds. Always set TTL as safety net.</p>
+        <p style="margin-top:6px;"><strong style="color:var(--cyan);">⚠️ Cache Invalidation</strong> is the hard problem. When DB updates, how do you update/delete the cache? This is "one of the two hard things in CS."</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <strong style="color:var(--text);">Where to cache:</strong> Client (browser cache, CDN) → API Gateway → App-level (Redis/Memcached) → DB query cache. Multiple layers.
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 7 — CDN ═══════════════ -->
+<div class="slide" data-slide="7">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 5: CDN & Storage 🌐</div>
+  <div class="anim-item slide-subtitle">Serve static content from the edge — close to the user</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> A CDN (Content Delivery Network) is a globally distributed cache for static files (images, videos, CSS, JS). Instead of every user fetching from your server in us-east-1, the CDN caches content at 200+ edge locations worldwide. User in Tokyo gets served from Tokyo PoP (~20ms) instead of Virginia (~200ms).
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Push vs Pull CDN</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">Pull CDN:</strong> CDN fetches from origin on first request, then caches. Best for dynamic/frequently changing content. (CloudFront, Fastly)</p>
+        <p><strong style="color:var(--orange);">Push CDN:</strong> You upload content to CDN proactively. Best for large static files you control (videos, software downloads).</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">Object Storage (S3)</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--text);">For blobs:</strong> images, videos, files, backups. NOT for structured data.</p>
+        <p><strong style="color:var(--text);">Virtually unlimited</strong> storage. $0.023/GB/month.</p>
+        <p><strong style="color:var(--text);">Pattern:</strong> User uploads → store in S3 → serve via CDN.</p>
+        <p><strong style="color:var(--text);">DB stores metadata</strong> (filename, size, S3 URL), NOT the file itself.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 8 — MESSAGE QUEUES ═══════════════ -->
+<div class="slide" data-slide="8">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 6: Message Queues 📬</div>
+  <div class="anim-item slide-subtitle">Decouple services, handle bursts, enable async processing</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> A message queue sits between Producer and Consumer. The producer writes messages, the consumer processes them at its own pace. This gives you: <strong>(1) Decoupling</strong> — services don't need to know about each other, <strong>(2) Buffering</strong> — handle traffic spikes, <strong>(3) Async</strong> — don't block the user for slow work (send email, resize image, update search index).
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin:8px 0;">
+    <div class="arch-row">
+      <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1);">Producer<br><span style="font-size:11px;">(API Server)</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); padding:14px 24px;">📬 Queue<br><span style="font-size:11px;">(Kafka / SQS)</span></div>
+      <div class="arch-arrow">→</div>
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Worker 1</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Worker 2</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Worker 3</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">When to Use</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p>🔔 Send notifications after user action</p>
+        <p>🖼️ Process images/videos asynchronously</p>
+        <p>📊 Update analytics/search indices in background</p>
+        <p>📈 Handle traffic spikes (queue absorbs burst)</p>
+        <p>🔄 Ensure at-least-once delivery (retries)</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Kafka vs Simple Queues</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">SQS/RabbitMQ:</strong> Simple job queue. Message consumed once and deleted. Task workers.</p>
+        <p><strong style="color:var(--purple);">Kafka:</strong> Distributed log. Messages retained. Multiple consumer groups can read same data. Event streaming, real-time pipelines.</p>
+        <p style="margin-top:6px;"><strong style="color:var(--text);">Rule of thumb:</strong> Task queue (resize image) → SQS. Event stream (user clicked X, propagate to 5 services) → Kafka.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 9 — DATABASE SCALING ═══════════════ -->
+<div class="slide" data-slide="9">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 7: Database Scaling 📈</div>
+  <div class="anim-item slide-subtitle">Replication, sharding, and partitioning — how to handle billions of rows</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> When one DB isn't enough: (1) <strong>Read Replicas</strong> — copies that handle read queries (scale reads). (2) <strong>Sharding</strong> — split data across multiple DBs by a shard key (scale writes + storage). Sharding is painful and the last resort. Always try: index optimization → read replicas → caching → vertical scaling → THEN sharding.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Replication (Master-Replica)</div>
+      <div style="text-align:center; margin:8px 0;">
+        <div class="arch-row">
+          <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); font-size:12px;">Master<br>(writes)</div>
+          <div class="arch-arrow">→</div>
+          <div style="display:flex; flex-direction:column; gap:4px;">
+            <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:11px; min-width:80px;">Replica 1 (reads)</div>
+            <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:11px; min-width:80px;">Replica 2 (reads)</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:13px; color:var(--muted);">All writes go to master, replicated async to replicas. Reads distributed across replicas. Tradeoff: slight replication lag (eventual consistency).</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--red);">
+      <div class="card-title" style="color:var(--red);">Sharding (Horizontal Partitioning)</div>
+      <div style="text-align:center; margin:8px 0;">
+        <div class="arch-row">
+          <div style="display:flex; gap:6px;">
+            <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:11px;">Shard A<br>users A-M</div>
+            <div class="arch-box" style="border-color:var(--purple); color:var(--purple); background:rgba(167,139,250,0.1); font-size:11px;">Shard B<br>users N-Z</div>
+          </div>
+        </div>
+      </div>
+      <p style="font-size:13px; color:var(--muted);"><strong style="color:var(--text);">Shard key choice is CRITICAL.</strong> Bad key → uneven distribution (hotspots). Good keys: user_id, geographic region. Bad keys: timestamp (all writes go to latest shard).</p>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">Consistent Hashing (mention in interviews!)</div>
+    <p style="font-size:14px; color:var(--muted);">When sharding, use <strong style="color:var(--text);">consistent hashing</strong> so that adding/removing a shard only moves ~1/N of the data (instead of reshuffling everything). Nodes are placed on a hash ring. Each key maps to the next node clockwise. Adding a node only affects keys between it and its predecessor.</p>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 10 — CAP + CONSISTENCY ═══════════════ -->
+<div class="slide" data-slide="10">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Core Concept: CAP Theorem & Consistency ⚖️</div>
+  <div class="anim-item slide-subtitle">The fundamental tradeoff in distributed systems</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> In a distributed system, when a network partition happens, you MUST choose between Consistency (every read gets the latest write) and Availability (every request gets a response). You can't have both during a partition. <strong>CP = banking (prefer correct data). AP = social media (prefer being available).</strong>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">CAP Breakdown</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">C — Consistency:</strong> All nodes see the same data at the same time.</p>
+        <p><strong style="color:var(--orange);">A — Availability:</strong> Every request gets a response (even if not latest data).</p>
+        <p><strong style="color:var(--red);">P — Partition Tolerance:</strong> System works despite network splits. <em>(Always true in real systems!)</em></p>
+        <p style="margin-top:8px;"><strong style="color:var(--text);">So the real choice is: CP or AP.</strong></p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Consistency Spectrum</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">Strong:</strong> Reads always return the latest write. Slow but correct. (CP: Zookeeper, etcd)</p>
+        <p><strong style="color:var(--orange);">Eventual:</strong> Reads may return stale data, but will converge. Fast. (AP: Cassandra, DynamoDB)</p>
+        <p><strong style="color:var(--purple);">Causal:</strong> Preserves cause→effect ordering. Middle ground. (MongoDB)</p>
+        <p style="margin-top:8px;">In interviews, say: <em>"For this system, I'll choose <strong>[strong/eventual]</strong> consistency because..."</em></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">ACID vs BASE</div>
+    <div style="font-size:14px; color:var(--muted);">
+      <strong style="color:var(--cyan);">ACID</strong> (SQL): Atomicity, Consistency, Isolation, Durability → strong guarantees, lower throughput.
+      <strong style="color:var(--green);">BASE</strong> (NoSQL): Basically Available, Soft state, Eventually consistent → high availability, higher throughput.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 11 — RATE LIMITING ═══════════════ -->
+<div class="slide" data-slide="11">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Building Block 8: Rate Limiting & Security 🛡️</div>
+  <div class="anim-item slide-subtitle">Protect your system from abuse, DDoS, and misbehaving clients</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Rate limiting caps how many requests a client can make in a time window. Without it, a single client can overwhelm your system. Implement at the API Gateway level. Common: 100 requests/minute per user. Return HTTP 429 (Too Many Requests) when exceeded.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Algorithms</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">Token Bucket:</strong> Tokens added at fixed rate. Each request costs 1 token. No tokens → rejected. <strong>Most popular.</strong> Allows short bursts.</p>
+        <p><strong style="color:var(--orange);">Sliding Window Log:</strong> Track timestamps of requests. Count in rolling window. More precise but more memory.</p>
+        <p><strong style="color:var(--purple);">Fixed Window Counter:</strong> Count per minute. Simplest. Edge case: bursts at window boundary.</p>
+        <p><strong style="color:var(--pink);">Leaky Bucket:</strong> Requests enter bucket, processed at fixed rate. Smooths burst traffic.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Implementation</div>
+      <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--text);">Where:</strong> API Gateway (Kong, Envoy) or middleware layer.</p>
+        <p><strong style="color:var(--text);">Storage:</strong> Redis (fast, distributed, INCR + EXPIRE).</p>
+        <p><strong style="color:var(--text);">Key:</strong> Rate limit by user_id, IP, API key, or combination.</p>
+        <p><strong style="color:var(--text);">Headers:</strong> Return X-RateLimit-Remaining, X-RateLimit-Reset.</p>
+        <p style="margin-top:6px; color:var(--red);">Distributed rate limiting is harder — use Redis Lua scripts for atomic check-and-increment.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 12 — UNIQUE ID + URL SHORTENER ═══════════════ -->
+<div class="slide" data-slide="12">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 1: URL Shortener (TinyURL) 🔗</div>
+  <div class="anim-item slide-subtitle">THE most common system design interview question — tests fundamentals</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Map a long URL to a short code (7 chars, base62 = 62⁷ = 3.5 trillion URLs). Core challenge: generate unique short codes at scale. Two approaches: hash the URL (collision risk) or use a distributed ID generator (no collisions).
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div class="card-title" style="color:var(--cyan);">Architecture</div>
+    <div style="text-align:center; margin:8px 0;">
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1); font-size:12px;">Client</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:12px;">LB</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">App Server<br><span style="font-size:10px;">Generate short code</span></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); font-size:12px;">DB (NoSQL)<br><span style="font-size:10px;">short→long mapping</span></div>
+      </div>
+      <div class="arch-row" style="margin-top:4px;">
+        <div style="font-size:12px; color:var(--muted);">+ Redis cache for hot URLs &nbsp;|&nbsp; + Rate Limiter at LB</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">ID Generation Strategies</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">1. Hash + truncate:</strong> MD5/SHA256(url) → take first 7 chars (base62). Simple but collision possible → check DB, regenerate.</p>
+        <p><strong style="color:var(--orange);">2. Counter-based:</strong> Auto-increment ID → base62 encode. No collision but predictable. Use distributed counter (Snowflake/UUID).</p>
+        <p><strong style="color:var(--purple);">3. Pre-generated pool:</strong> Generate IDs in batch, store in Redis. Workers grab next available. No collisions, fast.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Read Flow (redirect)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p>1. User hits tinyurl.com/<strong style="color:var(--cyan);">abc123</strong></p>
+        <p>2. Check <strong style="color:var(--green);">Redis cache</strong> → hit? Return 301.</p>
+        <p>3. Miss → query <strong style="color:var(--orange);">DB</strong> → store in cache.</p>
+        <p>4. Return <strong style="color:var(--text);">301 (permanent)</strong> or <strong style="color:var(--text);">302 (temporary)</strong> redirect.</p>
+        <p style="margin-top:6px;">301 = browsers cache the redirect (less server load).<br>302 = server sees every request (better for analytics).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:13px; color:var(--muted);">
+    <strong style="color:var(--text);">Deep dive topics:</strong> Analytics (count clicks per URL), TTL/expiration, custom aliases, rate limiting creation.
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 13 — TWITTER/NEWS FEED ═══════════════ -->
+<div class="slide" data-slide="13">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 2: Twitter / News Feed 🐦</div>
+  <div class="anim-item slide-subtitle">The most important tradeoff: fan-out on write vs fan-out on read</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea — THE tradeoff:</strong> When user A posts a tweet and A has 1M followers: <strong>Fan-out on Write</strong> = immediately push tweet to all 1M followers' timelines (fast reads, slow writes). <strong>Fan-out on Read</strong> = when each follower opens their feed, pull A's latest tweets (slow reads, fast writes). <strong>Hybrid</strong> (what Twitter does): fan-out on write for normal users, fan-out on read for celebrities.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Fan-out on Write (Push model)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--cyan);"></div> User posts tweet</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Get all followers from Follow table</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> Write tweet_id to each follower's timeline cache (Redis list)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> Each follower's GET /timeline → read from pre-computed cache</div>
+        <p style="margin-top:6px;">✅ Reads are FAST (just read from cache) | ❌ Writes are expensive for celebrities (push to millions)</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Fan-out on Read (Pull model)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--cyan);"></div> User opens timeline</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Get list of people I follow</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> Fetch latest tweets from each + merge + sort by time</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> Return top N tweets</div>
+        <p style="margin-top:6px;">✅ Writes are instant | ❌ Reads are slow (N queries + merge at read time)</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--purple);">
+    <div class="card-title" style="color:var(--purple);">Data Model</div>
+    <div style="font-size:13px; color:var(--muted);">
+      <strong style="color:var(--text);">Users table:</strong> user_id, name, bio, ... (SQL) &nbsp;|&nbsp;
+      <strong style="color:var(--text);">Tweets table:</strong> tweet_id, user_id, content, timestamp, media_urls (SQL/NoSQL) &nbsp;|&nbsp;
+      <strong style="color:var(--text);">Follow table:</strong> follower_id, followee_id (SQL) &nbsp;|&nbsp;
+      <strong style="color:var(--text);">Timeline cache:</strong> user_id → [tweet_id, tweet_id, ...] (Redis sorted set by timestamp)
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 14 — CHAT / MESSAGING ═══════════════ -->
+<div class="slide" data-slide="14">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 3: Chat System (WhatsApp) 💬</div>
+  <div class="anim-item slide-subtitle">Real-time messaging — WebSockets, presence, and message delivery</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Chat requires persistent bidirectional connections (WebSockets). When user A sends a message to user B: if B is online, push via WebSocket. If B is offline, store in DB + push notification. The hard parts: (1) Ensuring ordering/consistency, (2) Group chat fan-out, (3) Read receipts, (4) Online/offline presence.
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin:8px 0;">
+    <div class="arch-row">
+      <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1); font-size:12px;">User A<br>(sender)</div>
+      <div class="arch-arrow">WS→</div>
+      <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:12px;">Chat Server<br><span style="font-size:10px;">(stateful WS)</span></div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); font-size:12px;">Message Queue<br>(Kafka)</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Chat Server B<br><span style="font-size:10px;">(User B connected)</span></div>
+      <div class="arch-arrow">→WS</div>
+      <div class="arch-box" style="border-color:var(--purple); color:var(--purple); background:rgba(167,139,250,0.1); font-size:12px;">User B<br>(receiver)</div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Key Components</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">Connection Manager:</strong> Maps user_id → which chat server they're connected to (Redis).</p>
+        <p><strong style="color:var(--orange);">Message Store:</strong> Cassandra (write-heavy, time-series). Partition by chat_id. Sorted by timestamp.</p>
+        <p><strong style="color:var(--purple);">Presence Service:</strong> Heartbeat every 30s. If no heartbeat → mark offline. Store in Redis.</p>
+        <p><strong style="color:var(--pink);">Push Notification:</strong> For offline users. APNs (iOS), FCM (Android).</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Message Delivery (1:1)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--cyan);"></div> A sends msg via WebSocket</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Server generates msg_id (monotonic)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> Store in Cassandra (chat_id, timestamp, msg)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> Check: is B online? Query connection manager</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Online → push via B's chat server WS</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--red);"></div> Offline → push notification + store unread</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 15 — YOUTUBE / VIDEO ═══════════════ -->
+<div class="slide" data-slide="15">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 4: YouTube / Video Streaming 📹</div>
+  <div class="anim-item slide-subtitle">Upload, transcode, store, and stream video at scale</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Video is HUGE (a 1-hour 1080p video ≈ 1-3 GB). You can't serve raw uploads. The pipeline: (1) Upload to object storage, (2) Transcode to multiple resolutions (240p, 480p, 720p, 1080p) + formats (H.264, VP9), (3) Store transcoded chunks on object storage, (4) Serve via CDN using adaptive bitrate streaming (HLS/DASH) — client progressively downloads chunks at the best quality for their bandwidth.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+    <div class="card-title" style="color:var(--cyan);">Upload & Processing Pipeline</div>
+    <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+      <div class="flow-line"><div class="flow-dot" style="background:var(--blue);"></div> <strong style="color:var(--text);">Upload:</strong> Client → pre-signed S3 URL → direct upload to object storage (bypasses app server)</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> <strong style="color:var(--text);">Queue:</strong> Upload event → message queue (Kafka/SQS)</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> <strong style="color:var(--text);">Transcode:</strong> Workers split video into chunks → encode each in multiple resolutions → parallel processing</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> <strong style="color:var(--text);">Store:</strong> Chunks stored in S3 → CDN URL generated → DB updated with metadata</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--pink);"></div> <strong style="color:var(--text);">Serve:</strong> Client requests manifest (HLS .m3u8) → CDN serves video chunks adaptively</div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Adaptive Bitrate (HLS/DASH)</div>
+      <div style="font-size:13px; color:var(--muted); line-height:1.8;">
+        Video split into 2-10 second chunks. Client measures bandwidth and switches quality seamlessly. Buffering? Switch to 480p. Good WiFi? Switch to 1080p. Each chunk is a separate CDN-cached file.
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Storage Estimation</div>
+      <div style="font-size:13px; color:var(--muted); line-height:1.8;">
+        500 hours uploaded/minute (YouTube)<br>
+        × 3 resolutions × 0.5 GB avg = 750 GB/minute<br>
+        × 1440 min/day = <strong style="color:var(--red);">~1 PB/day</strong><br>
+        This is why CDN + object storage is critical.
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 16 — NOTIFICATION SYSTEM ═══════════════ -->
+<div class="slide" data-slide="16">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 5: Notification System 🔔</div>
+  <div class="anim-item slide-subtitle">Push, email, SMS at scale — reliability + deduplication</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> A notification system is an event-driven pipeline. Event triggers (user followed, order shipped) → notification service determines WHO to notify + WHAT channel (push/email/SMS) → format message using templates → dispatch via the channel-specific provider (APNs, FCM, SendGrid, Twilio). Core challenges: (1) At-least-once delivery, (2) Deduplication, (3) Rate limiting per user, (4) User preferences.
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin:8px 0;">
+    <div class="arch-row" style="flex-wrap:wrap;">
+      <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1); font-size:12px;">Events<br>(services)</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); font-size:12px;">Message Queue</div>
+      <div class="arch-arrow">→</div>
+      <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:12px;">Notification<br>Service</div>
+      <div class="arch-arrow">→</div>
+      <div style="display:flex; flex-direction:column; gap:4px;">
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:11px; min-width:80px;">📱 Push (APNs/FCM)</div>
+        <div class="arch-box" style="border-color:var(--purple); color:var(--purple); background:rgba(167,139,250,0.1); font-size:11px; min-width:80px;">📧 Email (SendGrid)</div>
+        <div class="arch-box" style="border-color:var(--pink); color:var(--pink); background:rgba(244,114,182,0.1); font-size:11px; min-width:80px;">📲 SMS (Twilio)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--green);">
+    <div class="card-title" style="color:var(--green);">Reliability Patterns</div>
+    <div style="font-size:14px; color:var(--muted); line-height:1.8;">
+      <strong style="color:var(--cyan);">Deduplication:</strong> Store notification_id in Redis with TTL. Before sending, check if already sent. &nbsp;|&nbsp;
+      <strong style="color:var(--orange);">Retry with backoff:</strong> If provider fails, retry with exponential backoff (1s, 2s, 4s, 8s...). Max 3-5 retries. Dead-letter queue for permanent failures. &nbsp;|&nbsp;
+      <strong style="color:var(--purple);">User preferences:</strong> DB table: user_id, channel, enabled, quiet_hours. Respect Do Not Disturb.
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 17 — SEARCH / TYPEAHEAD ═══════════════ -->
+<div class="slide" data-slide="17">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 6: Search & Autocomplete 🔍</div>
+  <div class="anim-item slide-subtitle">Full-text search with Elasticsearch + typeahead suggestions</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea — Search:</strong> Use an inverted index (Elasticsearch/Solr). Instead of "doc → words", store "word → [doc1, doc3, doc7]". Query = find intersection of posting lists. Relevance = TF-IDF or BM25 scoring.<br>
+    <strong>💡 Key idea — Typeahead:</strong> Use a Trie in memory that stores top-K completions at every prefix node. User types "app" → traverse trie to "app" node → return precomputed ["apple", "application", "app store"]. Update trie periodically from analytics.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Search Architecture (Elasticsearch)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--blue);"></div> Data changes in primary DB (MySQL)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> CDC (Change Data Capture) or queue event → update Elasticsearch index</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Search query → Elasticsearch (inverted index, < 50ms for millions of docs)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> ES returns ranked doc IDs → app fetches full data from DB/cache</div>
+        <p style="margin-top:6px;"><strong style="color:var(--text);">Key:</strong> ES is NOT the source of truth. Primary DB is. ES is a read-optimized index.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Typeahead Design</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--text);">Data structure:</strong> Trie where each node stores top-K completions (precomputed).</p>
+        <p><strong style="color:var(--text);">Serving:</strong> Trie fits in memory (100M queries × 20 chars = ~2GB). Replicate across multiple servers.</p>
+        <p><strong style="color:var(--text);">Updates:</strong> Collect search analytics → offline pipeline (MapReduce) → rebuild trie weekly → swap in.</p>
+        <p><strong style="color:var(--text);">Latency:</strong> < 100ms requirement. Debounce on client side (only query after 300ms pause).</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 18 — KEY-VALUE STORE ═══════════════ -->
+<div class="slide" data-slide="18">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 7: Distributed Key-Value Store 🔑</div>
+  <div class="anim-item slide-subtitle">The building block behind DynamoDB, Cassandra, and distributed caches</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> This is where all the distributed systems theory comes together. A distributed KV store must handle: (1) <strong>Partitioning</strong> — which node stores which key? (consistent hashing), (2) <strong>Replication</strong> — copy to N nodes for durability, (3) <strong>Consistency</strong> — quorum reads/writes (W+R > N guarantees consistency), (4) <strong>Failure detection</strong> — gossip protocol, (5) <strong>Conflict resolution</strong> — vector clocks or last-write-wins.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Core Mechanisms</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--green);">Consistent Hashing:</strong> Hash ring. Each node owns a range. Adding/removing node only affects neighbors.</p>
+        <p><strong style="color:var(--orange);">Replication:</strong> N=3 → store each key on 3 consecutive nodes clockwise on the ring.</p>
+        <p><strong style="color:var(--purple);">Quorum:</strong> W=2, R=2, N=3. Write succeeds when 2/3 nodes ACK. Read queries 2/3 nodes. W+R>N → guaranteed to see latest write.</p>
+        <p><strong style="color:var(--pink);">Gossip Protocol:</strong> Nodes periodically share state with random peers. Failure detected when no heartbeat.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Tunable Consistency</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--text);">Strong (W=N, R=1):</strong> All nodes must ACK write. Slow but always consistent.</p>
+        <p><strong style="color:var(--text);">Eventual (W=1, R=1):</strong> Write to any one node, read any one. Fastest but may be stale.</p>
+        <p><strong style="color:var(--text);">Balanced (W=2, R=2, N=3):</strong> Good balance. Default recommendation.</p>
+        <p style="margin-top:4px;"><strong style="color:var(--red);">Conflict resolution:</strong> Vector clocks track causality. If no causal relation → conflict → application must resolve (or use last-write-wins / CRDTs).</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 19 — WEB CRAWLER ═══════════════ -->
+<div class="slide" data-slide="19">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 8: Web Crawler 🕷️</div>
+  <div class="anim-item slide-subtitle">Crawl billions of pages politely and efficiently</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> A web crawler is a BFS on the internet graph. Start with seed URLs → fetch page → extract links → add new links to queue → repeat. Core challenges: (1) <strong>Politeness</strong> — don't overwhelm any single host (rate limit per domain), (2) <strong>Deduplication</strong> — don't crawl the same URL twice (Bloom filter), (3) <strong>Scale</strong> — billions of URLs across thousands of workers, (4) <strong>Freshness</strong> — re-crawl pages that change frequently.
+  </div>
+
+  <div class="anim-item card" style="border-left:3px solid var(--green);">
+    <div class="card-title" style="color:var(--green);">Architecture</div>
+    <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+      <div class="flow-line"><div class="flow-dot" style="background:var(--cyan);"></div> <strong style="color:var(--text);">URL Frontier (priority queue):</strong> URLs to crawl, prioritized by importance + freshness</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> <strong style="color:var(--text);">DNS Resolver:</strong> Resolve domain → IP (cache heavily)</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> <strong style="color:var(--text);">Fetcher Workers:</strong> Download HTML. Obey robots.txt. Rate limit per domain (1 req/sec/domain).</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> <strong style="color:var(--text);">Content Parser:</strong> Extract links, text. Detect duplicates via content hash (SimHash for near-duplicates).</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--pink);"></div> <strong style="color:var(--text);">URL Dedup:</strong> Bloom filter (probabilistic, O(1) lookup, 1% false positive OK). Seen before? Skip.</div>
+      <div class="flow-line"><div class="flow-dot" style="background:var(--blue);"></div> <strong style="color:var(--text);">Storage:</strong> Store page content in object storage, metadata in DB.</div>
+    </div>
+  </div>
+
+  <div class="anim-item" style="font-size:14px; color:var(--muted);">
+    <strong style="color:var(--text);">Bloom Filter:</strong> A space-efficient probabilistic data structure. Can tell you "definitely not in set" or "probably in set." Perfect for URL dedup — 10 billion URLs in ~1.2 GB of memory.
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 20 — UBER / PROXIMITY ═══════════════ -->
+<div class="slide" data-slide="20">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 9: Uber / Google Maps (Proximity) 📍</div>
+  <div class="anim-item slide-subtitle">Location-based services — find nearby drivers, restaurants, friends</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> Searching "all drivers within 5km of me" on a flat DB is O(n) — too slow. Use a <strong>spatial index</strong>. Two approaches: (1) <strong>Geohash</strong> — divide earth into grid cells, encode as string. Nearby locations share prefix. Store in Redis as sorted set. (2) <strong>QuadTree</strong> — recursively subdivide areas into 4 quadrants until each cell has < K points. Both give O(log n) spatial queries.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Geohash (preferred in interviews)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p>Encode (lat, lng) into a string like <strong style="color:var(--green);">"9q8yyk"</strong></p>
+        <p>Longer string = more precise grid cell</p>
+        <p><strong style="color:var(--text);">6 chars ≈ ±1.2 km</strong> (good for nearby drivers)</p>
+        <p>Nearby points share prefix → efficient DB prefix query</p>
+        <p>Store: Redis <code>GEOADD drivers lng lat driver_id</code></p>
+        <p>Query: Redis <code>GEORADIUS drivers lng lat 5 km</code></p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Uber Ride Matching Flow</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--cyan);"></div> Rider requests ride (lat, lng, destination)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Query spatial index: find available drivers within 5km</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> Ranking service: sort by distance, rating, ETA</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> Send ride request to best driver via WebSocket</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--pink);"></div> Driver accepts → match confirmed → start tracking</div>
+        <p style="margin-top:6px;"><strong style="color:var(--text);">Location updates:</strong> Drivers send GPS every 3-5 sec → update spatial index. High write throughput → Redis or in-memory QuadTree.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 21 — DISTRIBUTED FILE STORAGE ═══════════════ -->
+<div class="slide" data-slide="21">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Classic Design 10: Google Drive / Dropbox 📁</div>
+  <div class="anim-item slide-subtitle">File sync, deduplication, and conflict resolution</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> The hard part isn't storage (use S3). It's <strong>sync</strong>. When user edits a file on laptop, it must appear on phone. Approach: split files into chunks (4MB each). Only upload changed chunks (dedup!). Use a metadata DB to track file → chunks mapping. Long-polling or WebSocket to notify other devices of changes. Conflict? Keep both versions and let user resolve.
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Upload Flow (chunked + dedup)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <div class="flow-line"><div class="flow-dot" style="background:var(--cyan);"></div> Client splits file into 4MB chunks</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--green);"></div> Hash each chunk (SHA256)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--orange);"></div> Ask server: "which chunks do you already have?"</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--purple);"></div> Upload only NEW chunks to block storage (S3)</div>
+        <div class="flow-line"><div class="flow-dot" style="background:var(--pink);"></div> Update metadata: file → [chunk_hash_1, chunk_hash_2, ...]</div>
+        <p style="margin-top:4px;"><strong style="color:var(--text);">Huge win:</strong> Edit 1 line in a 100MB file → only re-upload 1 chunk (4MB), not 100MB.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Sync & Conflict Resolution</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p><strong style="color:var(--cyan);">Notification:</strong> When file changes, server notifies all user's devices via long-polling / WebSocket.</p>
+        <p><strong style="color:var(--green);">Versioning:</strong> Every edit creates a new version. Old versions kept for 30 days.</p>
+        <p><strong style="color:var(--red);">Conflict:</strong> Two devices edit same file offline. On sync, server detects divergence → keeps both → user resolves.</p>
+        <p><strong style="color:var(--purple);">Operational Transform / CRDT:</strong> For real-time collaborative editing (Google Docs), more advanced.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 22 — RATE LIMITER DEEP DIVE ═══════════════ -->
+<div class="slide" data-slide="22">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Design Patterns: Microservices Essentials ⚙️</div>
+  <div class="anim-item slide-subtitle">Patterns that come up in every deep-dive: service discovery, circuit breaker, idempotency</div>
+
+  <div class="anim-item key-idea">
+    <strong>💡 Key idea:</strong> In a microservices world, services fail independently. You need patterns for resilience: <strong>Circuit Breaker</strong> (stop calling a failing service), <strong>Retry with backoff</strong> (handle transient failures), <strong>Idempotency</strong> (safe to retry without double-processing), <strong>Saga</strong> (distributed transactions across services).
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Circuit Breaker</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p>States: <strong style="color:var(--green);">Closed</strong> (normal) → <strong style="color:var(--orange);">Open</strong> (after N failures, stop calling) → <strong style="color:var(--purple);">Half-Open</strong> (try one request, if succeeds → close)</p>
+        <p>Prevents cascade failures. If Payment Service is down, don't keep hammering it — fail fast and return cached/default response.</p>
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">Saga Pattern (Distributed Tx)</div>
+      <div style="font-size:13px; line-height:1.8; color:var(--muted);">
+        <p>Order Service → Payment Service → Inventory Service. If payment fails, need to undo order.</p>
+        <p><strong style="color:var(--green);">Choreography:</strong> Each service emits events. Others react. Decoupled but hard to track.</p>
+        <p><strong style="color:var(--purple);">Orchestration:</strong> A central "saga coordinator" tells each service what to do/undo. Easier to reason about.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="anim-item flex-row">
+    <div class="card" style="border-left:3px solid var(--green);">
+      <div class="card-title" style="color:var(--green);">Idempotency</div>
+      <div style="font-size:13px; color:var(--muted); line-height:1.8;">
+        Client sends <code>Idempotency-Key: abc123</code> header. Server stores result in Redis keyed by idempotency key. If same key arrives again → return cached result, don't process twice. Critical for payments (never charge twice!).
+      </div>
+    </div>
+    <div class="card" style="border-left:3px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">Service Discovery</div>
+      <div style="font-size:13px; color:var(--muted); line-height:1.8;">
+        How does Service A find Service B's IP? <strong style="color:var(--cyan);">Service Registry</strong> (Consul, etcd, Zookeeper). Services register on startup, deregister on shutdown. Or use <strong style="color:var(--orange);">DNS-based</strong> (Kubernetes built-in: service-b.namespace.svc.cluster.local).
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 23 — COMMON COMPONENTS REFERENCE ═══════════════ -->
+<div class="slide" data-slide="23">
+<div class="slide-inner">
+  <div class="anim-item slide-title">Quick Reference: Tech Stack Cheat Sheet 🧰</div>
+  <div class="anim-item slide-subtitle">What to say in the interview when choosing technologies</div>
+
+  <div class="anim-item">
+    <table class="comp-table">
+      <tr><th style="width:22%;">Need</th><th style="width:35%;">Technology</th><th>When to mention</th></tr>
+      <tr><td style="color:var(--cyan);">Load Balancer</td><td>AWS ALB/NLB, Nginx, HAProxy</td><td>Always. First thing after client.</td></tr>
+      <tr><td style="color:var(--green);">Cache</td><td>Redis (features), Memcached (simple)</td><td>Any read-heavy system. Timeline, profiles.</td></tr>
+      <tr><td style="color:var(--orange);">SQL DB</td><td>PostgreSQL, MySQL, Aurora</td><td>Users, orders, relationships, transactions.</td></tr>
+      <tr><td style="color:var(--purple);">NoSQL</td><td>DynamoDB, Cassandra, MongoDB</td><td>High write throughput, flexible schema.</td></tr>
+      <tr><td style="color:var(--pink);">Message Queue</td><td>Kafka (stream), SQS/RabbitMQ (task)</td><td>Async processing, decoupling.</td></tr>
+      <tr><td style="color:var(--blue);">Object Storage</td><td>S3, GCS, Azure Blob</td><td>Images, videos, files, backups.</td></tr>
+      <tr><td style="color:var(--red);">CDN</td><td>CloudFront, Cloudflare, Akamai</td><td>Static content, global users, video.</td></tr>
+      <tr><td style="color:var(--lime);">Search</td><td>Elasticsearch, OpenSearch</td><td>Full-text search, logging, analytics.</td></tr>
+      <tr><td style="color:var(--cyan);">Spatial Index</td><td>Redis GEOADD, PostGIS, QuadTree</td><td>Location-based: Uber, Yelp, Maps.</td></tr>
+      <tr><td style="color:var(--green);">Rate Limiter</td><td>Redis (token bucket), API Gateway</td><td>Any public API. Always mention.</td></tr>
+      <tr><td style="color:var(--orange);">Service Mesh</td><td>Istio, Envoy, Linkerd</td><td>Microservices communication.</td></tr>
+      <tr><td style="color:var(--purple);">Monitoring</td><td>Prometheus+Grafana, Datadog</td><td>Deep-dive on reliability/operations.</td></tr>
+    </table>
+  </div>
+</div>
+</div>
+
+<!-- ═══════════════ SLIDE 24 — FINAL CHEAT SHEET ═══════════════ -->
+<div class="slide" data-slide="24">
+<div class="slide-inner">
+  <div class="anim-item slide-title" style="font-size:28px;">🏆 The Complete System Design Cheat Sheet</div>
+  <div class="anim-item slide-subtitle">Match the question to the pattern — instant architecture</div>
+
+  <div class="anim-item">
+    <table class="comp-table">
+      <tr><th style="width:28%;">Question</th><th style="width:40%;">Key Components</th><th>Core Tradeoff / Deep Dive</th></tr>
+      <tr><td style="color:var(--cyan);">URL Shortener</td><td>Hash/counter, KV store, cache, LB</td><td>ID generation strategy, 301 vs 302</td></tr>
+      <tr><td style="color:var(--green);">Twitter / News Feed</td><td>Fan-out, cache, DB, timeline service</td><td>Fan-out on write vs read, hybrid for celebrities</td></tr>
+      <tr><td style="color:var(--orange);">Chat (WhatsApp)</td><td>WebSocket, conn manager, Cassandra, queue</td><td>Online/offline, message ordering, group chat</td></tr>
+      <tr><td style="color:var(--purple);">YouTube / Netflix</td><td>CDN, transcoding pipeline, S3, HLS</td><td>Adaptive bitrate, upload pipeline, storage cost</td></tr>
+      <tr><td style="color:var(--pink);">Instagram / Pinterest</td><td>S3, CDN, news feed, search</td><td>Image processing pipeline, feed ranking</td></tr>
+      <tr><td style="color:var(--blue);">Uber / Lyft</td><td>Geohash/QuadTree, WebSocket, matching</td><td>Spatial indexing, real-time location updates</td></tr>
+      <tr><td style="color:var(--red);">Google Drive / Dropbox</td><td>Chunking, dedup, sync, S3, metadata DB</td><td>Conflict resolution, delta sync</td></tr>
+      <tr><td style="color:var(--lime);">Search / Typeahead</td><td>Elasticsearch, Trie, ranking</td><td>Inverted index, offline trie rebuild</td></tr>
+      <tr><td style="color:var(--cyan);">Rate Limiter</td><td>Token bucket, Redis, API Gateway</td><td>Distributed rate limiting, sliding window</td></tr>
+      <tr><td style="color:var(--green);">Notification System</td><td>Queue, APNs/FCM, templates, prefs</td><td>Dedup, retry, priority, user preferences</td></tr>
+      <tr><td style="color:var(--orange);">Key-Value Store</td><td>Consistent hashing, replication, quorum</td><td>W/R/N tuning, vector clocks, gossip</td></tr>
+      <tr><td style="color:var(--purple);">Web Crawler</td><td>URL frontier, Bloom filter, workers</td><td>Politeness, dedup, freshness priority</td></tr>
+      <tr><td style="color:var(--pink);">Ticketmaster</td><td>Queue, distributed locks, inventory DB</td><td>Avoiding oversell, seat reservation timeout</td></tr>
+      <tr><td style="color:var(--blue);">Payment System</td><td>Idempotency, ledger, saga, queue</td><td>Double-entry bookkeeping, reconciliation</td></tr>
+    </table>
+  </div>
+
+  <div class="anim-item card" style="margin-top:14px; background:rgba(34,211,238,0.08); border-color:var(--cyan); text-align:center;">
+    <div style="font-size:18px; font-weight:700; color:var(--cyan); margin-bottom:6px;">🎯 The Ultimate Rule</div>
+    <p style="font-size:16px; line-height:1.6;">System design is about <strong>structured communication</strong>, not memorization. Always: (1) Clarify requirements, (2) Do back-of-envelope math, (3) Start simple → evolve, (4) Discuss tradeoffs explicitly. <strong style="color:var(--green);">The interviewer wants to see HOW you think, not WHAT you memorize.</strong></p>
+  </div>
+
+  <div class="anim-item" style="text-align:center; margin-top:12px; font-size:13px; color:var(--muted);">
+    📚 <strong>Best resources:</strong> "System Design Interview" by Alex Xu (Vol 1 & 2), ByteByteGo (youtube), Designing Data-Intensive Applications (the bible).
+  </div>
+</div>
+</div>
+
+</div><!-- end slides-wrapper -->
+
+<script>
+let currentSlide = 0;
+const totalSlides = document.querySelectorAll('.slide').length;
+
+function updateUI() {
+  document.querySelectorAll('.slide').forEach((s, i) => {
+    s.classList.remove('active', 'exit-left');
+    if (i === currentSlide) s.classList.add('active');
+    else if (i < currentSlide) s.classList.add('exit-left');
+  });
+  document.getElementById('progressFill').style.width = (currentSlide / (totalSlides - 1) * 100) + '%';
+  document.getElementById('stepCounter').textContent = (currentSlide + 1) + ' / ' + totalSlides;
+  document.getElementById('btnPrev').disabled = currentSlide === 0;
+  document.getElementById('btnNext').disabled = currentSlide === totalSlides - 1;
+  const wrapper = document.querySelector('.slides-wrapper');
+  wrapper.scrollTop = 0;
+}
+
+function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateUI(); updateJump(); } }
+function prevSlide() { if (currentSlide > 0) { currentSlide--; updateUI(); updateJump(); } }
+function goToSlide(n) { if (n >= 0 && n < totalSlides) { currentSlide = n; updateUI(); updateJump(); } }
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+});
+
+// Slide jump dropdown
+const jumpSelect = document.getElementById('slideJump');
+const slideTitles = ['Title','Framework','Envelope Math','API Design','Load Balancer','Databases','Caching','CDN','Message Queues','DB Scaling','CAP Theorem','Rate Limiting','ID + URL Shortener','News Feed','Chat','Video','Notifications','Search','Key-Value Store','Web Crawler','Proximity','Distributed FS','Rate Limiter Deep','Components Ref','Cheat Sheet'];
+for (let i = 0; i < totalSlides; i++) {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = (i + 1) + '. ' + (slideTitles[i] || 'Slide ' + (i + 1));
+  jumpSelect.appendChild(opt);
+}
+function updateJump() { jumpSelect.value = currentSlide; }
+
+updateUI();
+</script>
+</body>
+</html>

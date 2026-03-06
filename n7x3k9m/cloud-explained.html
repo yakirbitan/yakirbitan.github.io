@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud Computing — From 0 to 100 — Animated</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --green: #34d399;
+    --orange: #fbbf24;
+    --red: #f87171;
+    --pink: #f472b6;
+    --cyan: #22d3ee;
+    --aws-orange: #ff9900;
+    --gcp-blue: #4285f4;
+    --gcp-red: #ea4335;
+    --gcp-yellow: #fbbc04;
+    --gcp-green: #34a853;
+    --azure-blue: #0078d4;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+
+  /* ─── Top Bar ─── */
+  .topbar {
+    position:fixed; top:0; left:0; right:0; z-index:100;
+    background:rgba(15,23,42,0.95); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--surface2); padding:10px 24px;
+    display:flex; align-items:center; gap:16px;
+  }
+  .topbar h1 { font-size:16px; color:var(--cyan); white-space:nowrap; }
+  .progress-track { flex:1; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+  .progress-fill { height:100%; background:linear-gradient(90deg,var(--cyan),var(--blue),var(--purple)); border-radius:3px; transition:width 0.5s ease; }
+  .step-counter { font-size:14px; color:var(--muted); white-space:nowrap; }
+
+  /* ─── Controls ─── */
+  .controls {
+    position:fixed; bottom:0; left:0; right:0; z-index:100;
+    background:rgba(15,23,42,0.95); backdrop-filter:blur(10px);
+    border-top:1px solid var(--surface2); padding:12px 24px;
+    display:flex; align-items:center; justify-content:center; gap:16px;
+  }
+  .btn { padding:8px 24px; border:none; border-radius:8px; font-size:15px; cursor:pointer; transition:all 0.2s; font-weight:600; }
+  .btn-primary { background:var(--cyan); color:var(--bg); }
+  .btn-primary:hover { background:#67e8f9; transform:translateY(-1px); }
+  .btn-secondary { background:var(--surface2); color:var(--text); }
+  .btn-secondary:hover { background:#475569; }
+  .btn:disabled { opacity:0.3; cursor:not-allowed; transform:none; }
+  .key-hint { font-size:12px; color:var(--muted); }
+
+  /* ─── Slides ─── */
+  .slides-wrapper {
+    position:fixed; top:82px; bottom:56px; left:0; right:0; overflow-y:auto; overflow-x:hidden;
+  }
+  .slides-wrapper::-webkit-scrollbar { width:6px; }
+  .slides-wrapper::-webkit-scrollbar-thumb { background:var(--surface2); border-radius:3px; }
+  .slide {
+    position:absolute; inset:0;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding:30px 40px;
+    opacity:0; transform:translateX(60px);
+    transition:opacity 0.5s, transform 0.5s;
+    pointer-events:none; overflow-y:auto;
+  }
+  .slide.active { opacity:1; transform:translateX(0); pointer-events:auto; }
+  .slide.exit-left { opacity:0; transform:translateX(-60px); }
+  .slide-inner { max-width:1100px; width:100%; padding-bottom:40px; }
+
+  .slide-title {
+    font-size:32px; font-weight:700; margin-bottom:8px;
+    background:linear-gradient(135deg,var(--cyan),var(--blue));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  .slide-subtitle { font-size:18px; color:var(--muted); margin-bottom:28px; }
+
+  .card { background:var(--surface); border-radius:12px; padding:20px; border:1px solid var(--surface2); margin-bottom:14px; }
+  .card-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+  .emoji-big { font-size:48px; margin-bottom:12px; display:block; }
+  .flex-row { display:flex; gap:14px; flex-wrap:wrap; }
+  .flex-row > * { flex:1; min-width:220px; }
+
+  /* ─── Animations ─── */
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeInLeft { from{opacity:0;transform:translateX(-30px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes glow { 0%,100%{box-shadow:0 0 5px var(--cyan)} 50%{box-shadow:0 0 25px var(--cyan)} }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes pingFlow { 0%{left:0;opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{left:100%;opacity:0} }
+  @keyframes rackBlink { 0%,100%{background:var(--green)} 50%{background:#065f46} }
+  @keyframes scaleIn { from{transform:scale(0);opacity:0} to{transform:scale(1);opacity:1} }
+  @keyframes slideRight { from{width:0} }
+
+  .anim-item { opacity:0; }
+  .slide.active .anim-item { animation:fadeInUp 0.6s ease forwards; }
+  .slide.active .anim-item:nth-child(2) { animation-delay:0.15s }
+  .slide.active .anim-item:nth-child(3) { animation-delay:0.3s }
+  .slide.active .anim-item:nth-child(4) { animation-delay:0.45s }
+  .slide.active .anim-item:nth-child(5) { animation-delay:0.6s }
+  .slide.active .anim-item:nth-child(6) { animation-delay:0.75s }
+  .slide.active .anim-item:nth-child(7) { animation-delay:0.9s }
+  .slide.active .anim-item:nth-child(8) { animation-delay:1.05s }
+
+  /* ─── Server rack visual ─── */
+  .rack { display:inline-flex; flex-direction:column; gap:3px; background:#0c0c0c; padding:8px; border-radius:6px; border:2px solid #333; }
+  .rack-unit { width:120px; height:14px; background:var(--surface2); border-radius:2px; display:flex; align-items:center; gap:3px; padding:0 4px; }
+  .rack-led { width:4px; height:4px; border-radius:50%; }
+  .rack-led.on { background:var(--green); animation:rackBlink 1.5s infinite; }
+  .rack-led.off { background:#374151; }
+
+  /* ─── Cloud provider logos ─── */
+  .provider-badge {
+    display:inline-flex; align-items:center; gap:8px; padding:6px 14px;
+    border-radius:8px; font-weight:700; font-size:15px;
+  }
+  .provider-aws { background:rgba(255,153,0,0.15); color:var(--aws-orange); border:1px solid var(--aws-orange); }
+  .provider-gcp { background:rgba(66,133,244,0.15); color:var(--gcp-blue); border:1px solid var(--gcp-blue); }
+  .provider-azure { background:rgba(0,120,212,0.15); color:var(--azure-blue); border:1px solid var(--azure-blue); }
+
+  /* ─── Service cards ─── */
+  .service-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+  .service-card {
+    background:var(--surface); border:1px solid var(--surface2); border-radius:10px;
+    padding:14px; text-align:center; transition:all 0.3s; cursor:default;
+  }
+  .service-card:hover { transform:translateY(-3px); border-color:var(--cyan); box-shadow:0 4px 20px rgba(34,211,238,0.15); }
+  .service-icon { font-size:28px; margin-bottom:6px; }
+  .service-name { font-size:14px; font-weight:700; }
+  .service-desc { font-size:12px; color:var(--muted); margin-top:2px; }
+
+  /* ─── Comparison table ─── */
+  .compare-table { width:100%; border-collapse:collapse; font-size:14px; }
+  .compare-table th { background:var(--surface2); padding:10px 14px; text-align:left; font-weight:700; border-radius:6px 6px 0 0; }
+  .compare-table td { padding:10px 14px; border-bottom:1px solid var(--surface2); }
+  .compare-table tr:hover td { background:rgba(34,211,238,0.05); }
+
+  /* ─── Region map ─── */
+  .region-map { position:relative; width:100%; height:200px; background:var(--surface); border-radius:12px; border:1px solid var(--surface2); overflow:hidden; }
+  .region-dot {
+    position:absolute; width:12px; height:12px; border-radius:50%;
+    background:var(--cyan); opacity:0; animation:scaleIn 0.5s ease forwards;
+  }
+  .region-dot::after {
+    content:''; position:absolute; inset:-4px; border-radius:50%;
+    border:2px solid var(--cyan); opacity:0.3; animation:pulse 2s infinite;
+  }
+  .region-label { position:absolute; font-size:11px; color:var(--muted); white-space:nowrap; }
+
+  /* ─── Architecture diagram ─── */
+  .arch-box {
+    display:inline-flex; align-items:center; justify-content:center;
+    padding:10px 18px; border-radius:8px; font-size:14px; font-weight:600;
+    border:2px solid; text-align:center; min-width:120px;
+  }
+  .arch-arrow { color:var(--muted); font-size:20px; display:flex; align-items:center; padding:0 6px; }
+
+  /* ─── Pricing bars ─── */
+  .price-bar-track { height:24px; background:var(--surface2); border-radius:6px; overflow:hidden; position:relative; }
+  .price-bar-fill { height:100%; border-radius:6px; transition:width 1.2s ease; display:flex; align-items:center; padding-left:8px; font-size:12px; font-weight:700; color:var(--bg); }
+
+  /* ─── Network flow ─── */
+  .flow-line {
+    position:relative; height:4px; background:var(--surface2); border-radius:2px; margin:12px 0; overflow:hidden;
+  }
+  .flow-dot {
+    position:absolute; width:20px; height:4px; background:var(--cyan); border-radius:2px;
+    animation:pingFlow 2s infinite linear;
+  }
+
+  /* dot grid bg */
+  .slides-wrapper::before {
+    content:''; position:fixed; top:82px; bottom:56px; left:0; right:0;
+    background-image:radial-gradient(circle,var(--surface2) 1px,transparent 1px);
+    background-size:30px 30px; opacity:0.3; pointer-events:none; z-index:0;
+  }
+  .slide { z-index:1; }
+
+  /* ─── IAM visual ─── */
+  .iam-entity {
+    display:inline-flex; flex-direction:column; align-items:center; gap:4px;
+    padding:12px 16px; border-radius:10px; background:var(--surface); border:1px solid var(--surface2);
+    font-size:13px; min-width:100px; text-align:center;
+  }
+  .iam-entity .iam-icon { font-size:28px; }
+
+  /* ─── Scaling animation ─── */
+  .scale-box {
+    width:50px; height:50px; border-radius:8px; background:var(--surface);
+    border:2px solid var(--cyan); display:flex; align-items:center; justify-content:center;
+    font-size:20px; transition:all 0.5s; opacity:0; transform:scale(0);
+  }
+  .scale-box.visible { opacity:1; transform:scale(1); }
+
+  /* ─── Guide Nav Bar ─── */
+  .guide-nav {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    background:rgba(15,23,42,0.98); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--surface2); padding:6px 16px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .guide-nav a {
+    padding:5px 14px; border-radius:6px; font-size:12px; font-weight:600;
+    text-decoration:none; color:var(--muted); transition:all 0.2s;
+    border:1px solid transparent; white-space:nowrap;
+  }
+  .guide-nav a:hover { color:var(--text); background:var(--surface2); }
+  .guide-nav a.active { color:var(--cyan); border-color:var(--cyan); background:rgba(34,211,238,0.1); }
+  .guide-nav .home-btn { color:var(--text); font-size:14px; margin-right:8px; }
+  .guide-nav .home-btn:hover { color:var(--cyan); }
+  .slide-jump { padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; background:var(--surface2); color:var(--text); border:1px solid var(--surface2); cursor:pointer; outline:none; }
+  .slide-jump:hover, .slide-jump:focus { border-color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="guide-nav">
+  <a href="index.html" class="home-btn" title="Home">🏠</a>
+  <a href="learning-tiers.html">Learning Tiers</a>
+  <a href="leetcode-patterns.html">LeetCode Patterns</a>
+  <a href="system-design.html">System Design</a>
+  <a href="cloud-explained.html" class="active">Cloud Computing</a>
+  <a href="llm-explained.html">How LLMs Work</a>
+</div>
+
+<div class="topbar" style="top:36px;">
+  <h1>☁️ Cloud Computing 0→100</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="step-counter" id="stepCounter">1 / 16</span>
+</div>
+
+<div class="controls">
+  <button class="btn btn-secondary" id="btnPrev" onclick="prevSlide()">← Back</button>
+  <select class="slide-jump" id="slideJump" onchange="goToSlide(parseInt(this.value))"></select>
+  <span class="key-hint">← → keys</span>
+  <button class="btn btn-primary" id="btnNext" onclick="nextSlide()">Next →</button>
+  <span class="key-hint">or use ← → arrow keys</span>
+</div>
+
+<div class="slides-wrapper">
+
+<!-- ═══ SLIDE 0: Title ═══ -->
+<div class="slide active" data-slide="0">
+  <div class="slide-inner" style="text-align:center; padding-top:60px;">
+    <div class="anim-item emoji-big">☁️</div>
+    <h1 class="anim-item slide-title" style="font-size:44px;">Cloud Computing From 0 to 100</h1>
+    <p class="anim-item slide-subtitle" style="font-size:20px;">Everything you need to know — AWS, GCP & Azure — animated step by step</p>
+    <div class="anim-item" style="display:flex; justify-content:center; gap:16px; margin-top:30px; flex-wrap:wrap;">
+      <span class="provider-badge provider-aws">🟠 AWS</span>
+      <span class="provider-badge provider-gcp">🔵 GCP</span>
+      <span class="provider-badge provider-azure">🔷 Azure</span>
+    </div>
+    <div class="anim-item" style="display:flex; justify-content:center; gap:12px; margin-top:30px; flex-wrap:wrap;">
+      <div class="card" style="max-width:150px;text-align:center;"><div style="font-size:24px;">🖥️</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Compute</div></div>
+      <div class="card" style="max-width:150px;text-align:center;"><div style="font-size:24px;">💾</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Storage</div></div>
+      <div class="card" style="max-width:150px;text-align:center;"><div style="font-size:24px;">🌐</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Networking</div></div>
+      <div class="card" style="max-width:150px;text-align:center;"><div style="font-size:24px;">🔒</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Security</div></div>
+      <div class="card" style="max-width:150px;text-align:center;"><div style="font-size:24px;">🐳</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Containers</div></div>
+      <div class="card" style="max-width:150px;text-align:center;"><div style="font-size:24px;">⚡</div><div style="font-size:12px;color:var(--muted);margin-top:4px;">Serverless</div></div>
+    </div>
+    <p class="anim-item" style="margin-top:24px; color:var(--muted);">Press <strong>Next →</strong> or <strong>→</strong> to begin</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 1: What IS the Cloud? ═══ -->
+<div class="slide" data-slide="1">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">What IS "The Cloud"? 🤔</div>
+    <div class="anim-item slide-subtitle">It's literally someone else's computer. But a LOT of them — managed for you.</div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-left:3px solid var(--red); text-align:center;">
+        <div style="font-size:36px; margin-bottom:8px;">🏠</div>
+        <div class="card-title" style="color:var(--red);">Before Cloud (On-Premise)</div>
+        <p style="color:var(--muted); font-size:14px;">You buy servers, put them in a room, plug in cables, install OS, update software, replace broken disks, pay for electricity 24/7, hire someone to guard them.</p>
+        <div style="margin-top:12px;">
+          <div class="rack">
+            <div class="rack-unit"><div class="rack-led off"></div><div class="rack-led off"></div><div class="rack-led off"></div></div>
+            <div class="rack-unit"><div class="rack-led off"></div><div class="rack-led off"></div><div class="rack-led off"></div></div>
+            <div class="rack-unit"><div class="rack-led off"></div><div class="rack-led off"></div><div class="rack-led off"></div></div>
+            <div class="rack-unit"><div class="rack-led off"></div><div class="rack-led off"></div><div class="rack-led off"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:8px; color:var(--red); font-size:13px; font-weight:600;">💰 $500K-$2M upfront + ongoing costs</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--cyan); text-align:center;">
+        <div style="font-size:36px; margin-bottom:8px;">☁️</div>
+        <div class="card-title" style="color:var(--cyan);">With Cloud</div>
+        <p style="color:var(--muted); font-size:14px;">Click a button → get a server in 30 seconds. Need 100 more? Click again. Done with them? Delete. Pay only for what you use, by the hour or second.</p>
+        <div style="margin-top:12px;">
+          <div class="rack">
+            <div class="rack-unit"><div class="rack-led on"></div><div class="rack-led on"></div><div class="rack-led on"></div></div>
+            <div class="rack-unit"><div class="rack-led on"></div><div class="rack-led on"></div><div class="rack-led on"></div></div>
+            <div class="rack-unit"><div class="rack-led on"></div><div class="rack-led on"></div><div class="rack-led on"></div></div>
+            <div class="rack-unit"><div class="rack-led on"></div><div class="rack-led on"></div><div class="rack-led on"></div></div>
+          </div>
+        </div>
+        <div style="margin-top:8px; color:var(--green); font-size:13px; font-weight:600;">💰 $0 upfront, ~$0.02/hour per server</div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(34,211,238,0.08); border-color:var(--cyan);">
+      <p>💡 <strong style="color:var(--cyan);">The real magic:</strong> Not just renting servers — it's 200+ managed services: databases, AI, queues, DNS, security, monitoring... all available via API in seconds. You build, they operate.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 2: The Big 3 ═══ -->
+<div class="slide" data-slide="2">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">The Big 3 Cloud Providers ☁️</div>
+    <div class="anim-item slide-subtitle">AWS, GCP, and Azure dominate ~65% of the market</div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-top:3px solid var(--aws-orange);">
+        <div style="text-align:center; margin-bottom:10px;">
+          <span style="font-size:36px;">🟠</span>
+          <div class="card-title" style="color:var(--aws-orange);">AWS (Amazon)</div>
+          <div style="color:var(--muted); font-size:13px;">~31% market share | Since 2006</div>
+        </div>
+        <p style="font-size:14px; color:var(--muted);">The pioneer. Most services (200+), biggest ecosystem. Default choice for most companies. Started because Amazon had extra server capacity!</p>
+        <div style="margin-top:8px; font-size:13px;">
+          <strong style="color:var(--aws-orange);">Known for:</strong><br>
+          • Most mature & broadest service catalog<br>
+          • Largest partner ecosystem<br>
+          • Most availability zones (99 AZs)
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--gcp-blue);">
+        <div style="text-align:center; margin-bottom:10px;">
+          <span style="font-size:36px;">🔵</span>
+          <div class="card-title" style="color:var(--gcp-blue);">GCP (Google)</div>
+          <div style="color:var(--muted); font-size:13px;">~12% market share | Since 2008</div>
+        </div>
+        <p style="font-size:14px; color:var(--muted);">Built on the same infra that runs Google Search, YouTube, Gmail. Strongest in data analytics, AI/ML, and Kubernetes (they invented it!).</p>
+        <div style="margin-top:8px; font-size:13px;">
+          <strong style="color:var(--gcp-blue);">Known for:</strong><br>
+          • Best data & AI/ML tools (BigQuery, Vertex AI)<br>
+          • Kubernetes-native (GKE is the gold standard)<br>
+          • Google's private global network
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--azure-blue);">
+        <div style="text-align:center; margin-bottom:10px;">
+          <span style="font-size:36px;">🔷</span>
+          <div class="card-title" style="color:var(--azure-blue);">Azure (Microsoft)</div>
+          <div style="color:var(--muted); font-size:13px;">~22% market share | Since 2010</div>
+        </div>
+        <p style="font-size:14px; color:var(--muted);">Deep integration with Microsoft ecosystem (Office 365, Active Directory, .NET). #1 choice for enterprises already using Microsoft tools.</p>
+        <div style="margin-top:8px; font-size:13px;">
+          <strong style="color:var(--azure-blue);">Known for:</strong><br>
+          • Enterprise/hybrid cloud leader<br>
+          • Best Active Directory integration<br>
+          • OpenAI partnership (Azure OpenAI)
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(251,191,36,0.08); border-color:var(--orange);">
+      <p>🎯 <strong style="color:var(--orange);">Which to learn?</strong> Start with AWS (most jobs require it). Add GCP if you do data/ML. Add Azure if your company uses Microsoft. The concepts are 90% identical — only service names differ.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 3: Service Models ═══ -->
+<div class="slide" data-slide="3">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">IaaS vs PaaS vs SaaS 🏗️</div>
+    <div class="anim-item slide-subtitle">How much do YOU manage vs how much does the CLOUD manage?</div>
+
+    <div class="anim-item" style="overflow-x:auto;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:120px;">Layer</th>
+            <th style="color:var(--red);">🏠 On-Premise</th>
+            <th style="color:var(--cyan);">🏗️ IaaS</th>
+            <th style="color:var(--purple);">📦 PaaS</th>
+            <th style="color:var(--green);">✨ SaaS</th>
+          </tr>
+        </thead>
+        <tbody id="serviceModelTable">
+          <tr><td><strong>Application</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Data</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Runtime</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Middleware</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>OS</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Virtualization</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Servers</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Storage</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+          <tr><td><strong>Networking</strong></td> <td style="color:var(--red);">You</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td> <td style="color:var(--green);">☁️ Cloud</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="anim-item flex-row" style="margin-top:14px;">
+      <div class="card" style="border-left:3px solid var(--cyan);">
+        <div class="card-title" style="color:var(--cyan);">IaaS Examples</div>
+        <p style="font-size:14px; color:var(--muted);">EC2, GCE, Azure VMs<br>"Give me a raw server, I'll handle the rest"</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--purple);">
+        <div class="card-title" style="color:var(--purple);">PaaS Examples</div>
+        <p style="font-size:14px; color:var(--muted);">Heroku, App Engine, Elastic Beanstalk<br>"Just deploy my code, handle everything else"</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title" style="color:var(--green);">SaaS Examples</div>
+        <p style="font-size:14px; color:var(--muted);">Gmail, Slack, Salesforce<br>"I just use the product, manage nothing"</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 4: Regions & Availability Zones ═══ -->
+<div class="slide" data-slide="4">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Regions & Availability Zones 🌍</div>
+    <div class="anim-item slide-subtitle">Your data lives somewhere physical — and redundancy keeps it alive</div>
+
+    <div class="anim-item region-map" id="regionMap">
+      <div class="region-dot" style="left:18%;top:35%;animation-delay:0.2s;"></div>
+      <div class="region-label" style="left:12%;top:48%;animation-delay:0.2s;">🇺🇸 US East</div>
+      <div class="region-dot" style="left:10%;top:40%;animation-delay:0.4s;"></div>
+      <div class="region-label" style="left:4%;top:53%;animation-delay:0.4s;">🇺🇸 US West</div>
+      <div class="region-dot" style="left:42%;top:30%;animation-delay:0.6s;"></div>
+      <div class="region-label" style="left:38%;top:43%;animation-delay:0.6s;">🇪🇺 Europe</div>
+      <div class="region-dot" style="left:55%;top:35%;animation-delay:0.8s;"></div>
+      <div class="region-label" style="left:52%;top:48%;animation-delay:0.8s;">🇮🇱 Tel Aviv</div>
+      <div class="region-dot" style="left:70%;top:30%;animation-delay:1.0s;"></div>
+      <div class="region-label" style="left:67%;top:43%;animation-delay:1.0s;">🇮🇳 Mumbai</div>
+      <div class="region-dot" style="left:82%;top:28%;animation-delay:1.2s;"></div>
+      <div class="region-label" style="left:79%;top:41%;animation-delay:1.2s;">🇯🇵 Tokyo</div>
+      <div class="region-dot" style="left:85%;top:70%;animation-delay:1.4s;"></div>
+      <div class="region-label" style="left:82%;top:83%;animation-delay:1.4s;">🇦🇺 Sydney</div>
+      <div class="region-dot" style="left:25%;top:72%;animation-delay:1.6s;"></div>
+      <div class="region-label" style="left:22%;top:85%;animation-delay:1.6s;">🇧🇷 São Paulo</div>
+    </div>
+
+    <div class="anim-item flex-row" style="margin-top:16px;">
+      <div class="card" style="border-left:3px solid var(--cyan);">
+        <div class="card-title" style="color:var(--cyan);">Region</div>
+        <p style="font-size:14px; color:var(--muted);">A geographic area (e.g., "us-east-1" = Virginia). Each region has <strong style="color:var(--text);">3+ Availability Zones</strong>. Choose a region close to your users for low latency.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--purple);">
+        <div class="card-title" style="color:var(--purple);">Availability Zone (AZ)</div>
+        <p style="font-size:14px; color:var(--muted);">A separate data center within a region, with its own power, cooling, and network. If one AZ burns down, others keep running. <strong style="color:var(--text);">Always deploy across 2+ AZs!</strong></p>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(248,113,113,0.08); border-color:var(--red);">
+      <p>🔥 <strong style="color:var(--red);">Real example:</strong> In 2017, an AWS engineer accidentally took down S3 in us-east-1. Half the internet broke. Lesson: multi-region = survival.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 5: Compute ═══ -->
+<div class="slide" data-slide="5">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Compute: Running Your Code 🖥️</div>
+    <div class="anim-item slide-subtitle">From raw VMs to zero-management serverless — pick your level of control</div>
+
+    <div class="anim-item">
+      <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px; flex-wrap:wrap;">
+        <div style="text-align:center; font-size:12px; color:var(--muted);">MORE CONTROL ←</div>
+        <div style="flex:1; height:4px; background:linear-gradient(90deg,var(--red),var(--orange),var(--green)); border-radius:2px;"></div>
+        <div style="text-align:center; font-size:12px; color:var(--muted);">→ LESS MANAGEMENT</div>
+      </div>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-top:3px solid var(--red);">
+        <div style="font-size:28px; text-align:center;">🖥️</div>
+        <div class="card-title" style="color:var(--red); text-align:center;">Virtual Machines</div>
+        <p style="font-size:13px; color:var(--muted); text-align:center;">Full server, you manage everything</p>
+        <div style="margin-top:8px; font-size:13px; line-height:1.8;">
+          <span style="color:var(--aws-orange);">AWS:</span> EC2<br>
+          <span style="color:var(--gcp-blue);">GCP:</span> Compute Engine<br>
+          <span style="color:var(--azure-blue);">Azure:</span> Virtual Machines
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--orange);">
+        <div style="font-size:28px; text-align:center;">🐳</div>
+        <div class="card-title" style="color:var(--orange); text-align:center;">Containers</div>
+        <p style="font-size:13px; color:var(--muted); text-align:center;">Package app + deps, orchestrate</p>
+        <div style="margin-top:8px; font-size:13px; line-height:1.8;">
+          <span style="color:var(--aws-orange);">AWS:</span> ECS / EKS<br>
+          <span style="color:var(--gcp-blue);">GCP:</span> GKE / Cloud Run<br>
+          <span style="color:var(--azure-blue);">Azure:</span> AKS
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green);">
+        <div style="font-size:28px; text-align:center;">⚡</div>
+        <div class="card-title" style="color:var(--green); text-align:center;">Serverless</div>
+        <p style="font-size:13px; color:var(--muted); text-align:center;">Just upload a function, pay per call</p>
+        <div style="margin-top:8px; font-size:13px; line-height:1.8;">
+          <span style="color:var(--aws-orange);">AWS:</span> Lambda<br>
+          <span style="color:var(--gcp-blue);">GCP:</span> Cloud Functions<br>
+          <span style="color:var(--azure-blue);">Azure:</span> Functions
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(34,211,238,0.08); border-color:var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">🐳 What IS a Container?</div>
+      <p style="font-size:14px; color:var(--muted); line-height:1.6;">A lightweight, isolated package containing your app + all its dependencies. Like a VM but shares the host OS kernel → starts in <strong style="color:var(--text);">milliseconds</strong> instead of minutes. Docker creates containers, Kubernetes orchestrates thousands of them.</p>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(52,211,153,0.08); border-color:var(--green);">
+      <div class="card-title" style="color:var(--green);">⚡ Serverless explained:</div>
+      <p style="font-size:14px; color:var(--muted); line-height:1.6;">Upload a function → it runs when triggered (HTTP request, file upload, timer). <strong style="color:var(--text);">0 requests = $0 cost.</strong> 1 million requests ≈ $0.20. You don't think about servers AT ALL. The cloud handles scaling, patching, everything.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 6: Storage ═══ -->
+<div class="slide" data-slide="6">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Storage: Where Your Data Lives 💾</div>
+    <div class="anim-item slide-subtitle">Objects, blocks, files, and databases — each for a different use case</div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-left:3px solid var(--orange);">
+        <div style="font-size:24px;">📦</div>
+        <div class="card-title" style="color:var(--orange);">Object Storage</div>
+        <p style="font-size:13px; color:var(--muted);">Store files (images, videos, backups). Unlimited size. Cheapest. Access via HTTP URL.</p>
+        <div style="margin-top:6px; font-size:13px; line-height:1.6;">
+          <span style="color:var(--aws-orange);">AWS:</span> <strong>S3</strong> 🏆<br>
+          <span style="color:var(--gcp-blue);">GCP:</span> Cloud Storage<br>
+          <span style="color:var(--azure-blue);">Azure:</span> Blob Storage
+        </div>
+        <div style="margin-top:6px; font-size:12px; color:var(--green);">~$0.023/GB/month</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <div style="font-size:24px;">💿</div>
+        <div class="card-title" style="color:var(--blue);">Block Storage</div>
+        <p style="font-size:13px; color:var(--muted);">Virtual hard disks attached to VMs. Fast, low-latency. Like a USB drive for your cloud server.</p>
+        <div style="margin-top:6px; font-size:13px; line-height:1.6;">
+          <span style="color:var(--aws-orange);">AWS:</span> EBS<br>
+          <span style="color:var(--gcp-blue);">GCP:</span> Persistent Disk<br>
+          <span style="color:var(--azure-blue);">Azure:</span> Managed Disks
+        </div>
+        <div style="margin-top:6px; font-size:12px; color:var(--green);">~$0.10/GB/month</div>
+      </div>
+      <div class="card" style="border-left:3px solid var(--purple);">
+        <div style="font-size:24px;">🗄️</div>
+        <div class="card-title" style="color:var(--purple);">Databases</div>
+        <p style="font-size:13px; color:var(--muted);">Managed SQL & NoSQL. Auto-backups, replication, scaling — no DBA needed.</p>
+        <div style="margin-top:6px; font-size:13px; line-height:1.6;">
+          <span style="color:var(--aws-orange);">AWS:</span> RDS, DynamoDB<br>
+          <span style="color:var(--gcp-blue);">GCP:</span> Cloud SQL, Firestore<br>
+          <span style="color:var(--azure-blue);">Azure:</span> SQL DB, Cosmos DB
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(34,211,238,0.08); border-color:var(--cyan);">
+      <p>💡 <strong style="color:var(--cyan);">S3 is THE most important cloud service.</strong> Almost everything uses it: static websites, data lakes, ML training data, backups, log storage. Learn S3 first!</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 7: Networking ═══ -->
+<div class="slide" data-slide="7">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Networking: Connecting Everything 🌐</div>
+    <div class="anim-item slide-subtitle">VPCs, load balancers, DNS, CDNs — how traffic flows in the cloud</div>
+
+    <div class="anim-item" style="text-align:center; margin-bottom:20px;">
+      <div style="display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap; justify-content:center;">
+        <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1);">👤 User</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1);">🌐 DNS<br><small>Route 53</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1);">🛡️ CDN<br><small>CloudFront</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--purple); color:var(--purple); background:rgba(167,139,250,0.1);">⚖️ Load Balancer<br><small>ALB/NLB</small></div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1);">🖥️ Servers<br><small>in VPC</small></div>
+      </div>
+      <div class="flow-line" style="max-width:700px; margin:12px auto;">
+        <div class="flow-dot"></div>
+        <div class="flow-dot" style="animation-delay:0.7s;"></div>
+        <div class="flow-dot" style="animation-delay:1.4s;"></div>
+      </div>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card">
+        <div class="card-title" style="color:var(--blue);">🏰 VPC (Virtual Private Cloud)</div>
+        <p style="font-size:14px; color:var(--muted);">Your own private network in the cloud. You define IP ranges, subnets (public/private), firewalls. Nothing gets in or out unless YOU allow it.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--purple);">⚖️ Load Balancer</div>
+        <p style="font-size:14px; color:var(--muted);">Distributes traffic across multiple servers. If one server dies, LB sends traffic to healthy ones. Essential for high availability.</p>
+      </div>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card">
+        <div class="card-title" style="color:var(--green);">🌐 DNS (Route 53 / Cloud DNS)</div>
+        <p style="font-size:14px; color:var(--muted);">Translates domain names (myapp.com) → IP addresses. Can do geographic routing: users in Europe → EU servers, US users → US servers.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--orange);">🚀 CDN (CloudFront / Cloud CDN)</div>
+        <p style="font-size:14px; color:var(--muted);">Caches your content at 400+ edge locations worldwide. User in Tokyo gets your image from a Tokyo cache instead of a Virginia server. ~10x faster.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 8: Security & IAM ═══ -->
+<div class="slide" data-slide="8">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Security & IAM 🔒</div>
+    <div class="anim-item slide-subtitle">Identity and Access Management — WHO can do WHAT on WHICH resource</div>
+
+    <div class="anim-item" style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:20px;">
+      <div class="iam-entity">
+        <div class="iam-icon">👤</div>
+        <strong>User</strong>
+        <span style="font-size:11px; color:var(--muted);">A person</span>
+      </div>
+      <div style="display:flex; align-items:center; font-size:24px; color:var(--muted);">∈</div>
+      <div class="iam-entity" style="border-color:var(--purple);">
+        <div class="iam-icon">👥</div>
+        <strong style="color:var(--purple);">Group</strong>
+        <span style="font-size:11px; color:var(--muted);">Team of users</span>
+      </div>
+      <div style="display:flex; align-items:center; font-size:24px; color:var(--muted);">→</div>
+      <div class="iam-entity" style="border-color:var(--blue);">
+        <div class="iam-icon">🎭</div>
+        <strong style="color:var(--blue);">Role</strong>
+        <span style="font-size:11px; color:var(--muted);">Temporary identity</span>
+      </div>
+      <div style="display:flex; align-items:center; font-size:24px; color:var(--muted);">←</div>
+      <div class="iam-entity" style="border-color:var(--orange);">
+        <div class="iam-icon">📜</div>
+        <strong style="color:var(--orange);">Policy</strong>
+        <span style="font-size:11px; color:var(--muted);">Permission rules</span>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">📜 IAM Policy (JSON) — Example:</div>
+      <pre style="background:var(--bg); padding:14px; border-radius:8px; font-size:13px; line-height:1.6; overflow-x:auto; color:var(--green); margin-top:8px;">{
+  "Effect": "Allow",
+  "Action": ["s3:GetObject", "s3:PutObject"],
+  "Resource": "arn:aws:s3:::my-bucket/*"
+}</pre>
+      <p style="font-size:13px; color:var(--muted); margin-top:8px;">Translation: "Allow this identity to read and write files in my-bucket." That's it. No access to delete, no access to other buckets.</p>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card">
+        <div class="card-title" style="color:var(--red);">🔑 Golden Rule: Least Privilege</div>
+        <p style="font-size:14px; color:var(--muted);">Give the MINIMUM permissions needed. A Lambda that reads from S3 should NOT have permission to delete databases. Start with zero access, add only what's needed.</p>
+      </div>
+      <div class="card">
+        <div class="card-title" style="color:var(--cyan);">🛡️ Security Layers</div>
+        <p style="font-size:14px; color:var(--muted);">
+          <strong>Network:</strong> VPC, Security Groups, NACLs<br>
+          <strong>Identity:</strong> IAM, MFA, SSO<br>
+          <strong>Data:</strong> Encryption at rest + in transit<br>
+          <strong>Monitoring:</strong> CloudTrail, GuardDuty
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 9: Auto Scaling ═══ -->
+<div class="slide" data-slide="9">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Auto Scaling — Grow & Shrink Automatically 📈</div>
+    <div class="anim-item slide-subtitle">More users? Add servers. Less users? Remove them. Pay only for what you need.</div>
+
+    <div class="anim-item card" style="border-left:3px solid var(--cyan);">
+      <div class="card-title" style="color:var(--cyan);">Watch the servers scale with traffic:</div>
+      <div style="display:flex; gap:8px; align-items:flex-end; justify-content:center; flex-wrap:wrap; min-height:180px; padding-top:20px;" id="scaleDemo">
+        <!-- JS populated -->
+      </div>
+      <div style="text-align:center; margin-top:12px;">
+        <button class="btn btn-secondary" onclick="simulateScale()" style="font-size:13px; padding:6px 16px;">🔄 Simulate Traffic Spike</button>
+      </div>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title" style="color:var(--green);">📈 Horizontal Scaling (Scale OUT)</div>
+        <p style="font-size:14px; color:var(--muted);">Add MORE servers when busy, remove when quiet. Like opening more checkout lanes at a supermarket. <strong style="color:var(--text);">The cloud default.</strong></p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--orange);">
+        <div class="card-title" style="color:var(--orange);">📊 Vertical Scaling (Scale UP)</div>
+        <p style="font-size:14px; color:var(--muted);">Make one server BIGGER (more CPU/RAM). Like replacing a small truck with a bigger truck. Has limits — eventually you hit the max size.</p>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(34,211,238,0.08); border-color:var(--cyan);">
+      <p>💡 <strong style="color:var(--cyan);">Scale triggers:</strong> CPU > 70%? Add 2 servers. Requests/sec > 10,000? Add 5. Queue depth > 1,000? Add workers. It's all rules-based or predictive (ML-powered).</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 10: Infrastructure as Code ═══ -->
+<div class="slide" data-slide="10">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Infrastructure as Code (IaC) 📝</div>
+    <div class="anim-item slide-subtitle">Never click buttons in a console — define your infrastructure in CODE</div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-left:3px solid var(--red);">
+        <div class="card-title" style="color:var(--red);">❌ The Old Way (Click Ops)</div>
+        <p style="font-size:14px; color:var(--muted);">Log into console → click "Create Server" → pick options → click "Create Database" → configure networking manually… 😩</p>
+        <p style="font-size:13px; color:var(--red); margin-top:6px;">Problems: not reproducible, no version history, easy to make mistakes, can't review changes</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title" style="color:var(--green);">✅ IaC Way (Code It)</div>
+        <p style="font-size:14px; color:var(--muted);">Write code describing what you want → run it → infrastructure appears. Same code → same result every time. Store in Git, review in PR!</p>
+        <p style="font-size:13px; color:var(--green); margin-top:6px;">Benefits: reproducible, version-controlled, peer-reviewed, automated</p>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="border-left:3px solid var(--purple);">
+      <div class="card-title" style="color:var(--purple);">Terraform Example — Create an AWS S3 bucket + Lambda:</div>
+      <pre style="background:var(--bg); padding:14px; border-radius:8px; font-size:13px; line-height:1.6; overflow-x:auto; color:var(--green); margin-top:8px;"><span style="color:var(--purple);">resource</span> <span style="color:var(--orange);">"aws_s3_bucket"</span> <span style="color:var(--cyan);">"my_data"</span> {
+  bucket = "my-app-data-bucket"
+  versioning { enabled = <span style="color:var(--orange);">true</span> }
+  encryption { sse_algorithm = "AES256" }
+}
+
+<span style="color:var(--purple);">resource</span> <span style="color:var(--orange);">"aws_lambda_function"</span> <span style="color:var(--cyan);">"processor"</span> {
+  function_name = "data-processor"
+  runtime       = "python3.11"
+  handler       = "main.handler"
+  memory_size   = 256
+  timeout       = 30
+}</pre>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;">🏗️</div>
+        <div style="font-weight:700; color:var(--purple);">Terraform</div>
+        <div style="font-size:12px; color:var(--muted);">Multi-cloud (#1 choice)</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;">📋</div>
+        <div style="font-weight:700; color:var(--aws-orange);">CloudFormation</div>
+        <div style="font-size:12px; color:var(--muted);">AWS-only</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;">🫸</div>
+        <div style="font-weight:700; color:var(--green);">Pulumi</div>
+        <div style="font-size:12px; color:var(--muted);">IaC in Python/TS/Go</div>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:24px;">🎩</div>
+        <div style="font-weight:700; color:var(--cyan);">Helm</div>
+        <div style="font-size:12px; color:var(--muted);">Kubernetes packages</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 11: CI/CD & DevOps ═══ -->
+<div class="slide" data-slide="11">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">CI/CD & DevOps 🚀</div>
+    <div class="anim-item slide-subtitle">Automate building, testing, and deploying your code — every git push</div>
+
+    <div class="anim-item" style="text-align:center;">
+      <div style="display:inline-flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:center;">
+        <div class="arch-box" style="border-color:var(--muted); color:var(--text); background:rgba(148,163,184,0.1);">📝 Git Push</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1);">🔨 Build</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--purple); color:var(--purple); background:rgba(167,139,250,0.1);">🧪 Test</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1);">📦 Package</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1);">🚀 Deploy</div>
+      </div>
+      <div class="flow-line" style="max-width:700px; margin:10px auto;">
+        <div class="flow-dot" style="background:var(--green);"></div>
+        <div class="flow-dot" style="animation-delay:0.5s; background:var(--green);"></div>
+      </div>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-left:3px solid var(--blue);">
+        <div class="card-title" style="color:var(--blue);">CI (Continuous Integration)</div>
+        <p style="font-size:14px; color:var(--muted);">Every code push triggers: build → run unit tests → lint → security scan. Fail fast, fix early. Developers merge to main multiple times per day.</p>
+      </div>
+      <div class="card" style="border-left:3px solid var(--green);">
+        <div class="card-title" style="color:var(--green);">CD (Continuous Deployment)</div>
+        <p style="font-size:14px; color:var(--muted);">If CI passes → auto-deploy to staging → run integration tests → deploy to production. No human clicks. Code goes live in minutes, not weeks.</p>
+      </div>
+    </div>
+
+    <div class="anim-item card">
+      <div class="card-title" style="color:var(--purple);">Deployment Strategies:</div>
+      <div class="flex-row" style="margin-top:8px;">
+        <div style="font-size:14px;">
+          <strong style="color:var(--green);">🔵🟢 Blue/Green:</strong><span style="color:var(--muted);"> Run 2 identical envs. Switch traffic from blue to green instantly. Rollback = switch back.</span>
+        </div>
+        <div style="font-size:14px;">
+          <strong style="color:var(--orange);">🐤 Canary:</strong><span style="color:var(--muted);"> Deploy to 5% of users first. Monitor errors. If OK → roll out to 100%. If bad → rollback.</span>
+        </div>
+        <div style="font-size:14px;">
+          <strong style="color:var(--blue);">🔄 Rolling:</strong><span style="color:var(--muted);"> Replace servers one at a time. Always some servers serving traffic. Gradual transition.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 12: Monitoring & Observability ═══ -->
+<div class="slide" data-slide="12">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Monitoring & Observability 📊</div>
+    <div class="anim-item slide-subtitle">You can't fix what you can't see — the 3 pillars of observability</div>
+
+    <div class="anim-item flex-row">
+      <div class="card" style="border-top:3px solid var(--cyan);">
+        <div style="font-size:28px; text-align:center;">📈</div>
+        <div class="card-title" style="color:var(--cyan); text-align:center;">Metrics</div>
+        <p style="font-size:14px; color:var(--muted); text-align:center;">Numbers over time: CPU%, memory, request count, error rate, latency P99</p>
+        <div style="margin-top:8px; font-size:13px; text-align:center;">
+          <span style="color:var(--aws-orange);">CloudWatch</span> |
+          <span style="color:var(--gcp-blue);">Cloud Monitoring</span> |
+          <span style="color:var(--purple);">Prometheus + Grafana</span>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--green);">
+        <div style="font-size:28px; text-align:center;">📋</div>
+        <div class="card-title" style="color:var(--green); text-align:center;">Logs</div>
+        <p style="font-size:14px; color:var(--muted); text-align:center;">Text records of what happened: errors, requests, debug info. Searchable and filterable.</p>
+        <div style="margin-top:8px; font-size:13px; text-align:center;">
+          <span style="color:var(--aws-orange);">CloudWatch Logs</span> |
+          <span style="color:var(--gcp-blue);">Cloud Logging</span> |
+          <span style="color:var(--purple);">ELK / Loki</span>
+        </div>
+      </div>
+      <div class="card" style="border-top:3px solid var(--orange);">
+        <div style="font-size:28px; text-align:center;">🔍</div>
+        <div class="card-title" style="color:var(--orange); text-align:center;">Traces</div>
+        <p style="font-size:14px; color:var(--muted); text-align:center;">Follow one request across 10+ services: API → Auth → DB → Cache → Response. Find the bottleneck.</p>
+        <div style="margin-top:8px; font-size:13px; text-align:center;">
+          <span style="color:var(--aws-orange);">X-Ray</span> |
+          <span style="color:var(--gcp-blue);">Cloud Trace</span> |
+          <span style="color:var(--purple);">Jaeger / Tempo</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(248,113,113,0.08); border-color:var(--red);">
+      <div class="card-title" style="color:var(--red);">🚨 Alerting — Don't stare at dashboards all day</div>
+      <p style="font-size:14px; color:var(--muted);">Set rules: <strong style="color:var(--text);">"If error rate > 5% for 3 minutes → page the on-call engineer via Slack/PagerDuty."</strong> The system watches itself. You sleep. Alerts wake you only when needed.</p>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(52,211,153,0.08); border-color:var(--green);">
+      <p>✅ <strong style="color:var(--green);">The 4 Golden Signals (from Google SRE):</strong> Latency, Traffic, Errors, Saturation. Monitor these 4 and you cover 90% of issues.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 13: Cost Management ═══ -->
+<div class="slide" data-slide="13">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Cost Management 💰</div>
+    <div class="anim-item slide-subtitle">The cloud is cheap... until it isn't. Cost optimization is a core skill.</div>
+
+    <div class="anim-item card" style="border-left:3px solid var(--orange);">
+      <div class="card-title" style="color:var(--orange);">💸 Typical monthly cloud bill breakdown:</div>
+      <div style="margin-top:10px;" id="costBars">
+        <div style="display:flex; align-items:center; gap:10px; margin:8px 0;">
+          <span style="width:100px; text-align:right; font-size:14px;">Compute</span>
+          <div class="price-bar-track" style="flex:1;"><div class="price-bar-fill" data-width="60%" style="background:var(--red);">60%</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin:8px 0;">
+          <span style="width:100px; text-align:right; font-size:14px;">Storage</span>
+          <div class="price-bar-track" style="flex:1;"><div class="price-bar-fill" data-width="15%" style="background:var(--orange);">15%</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin:8px 0;">
+          <span style="width:100px; text-align:right; font-size:14px;">Data Transfer</span>
+          <div class="price-bar-track" style="flex:1;"><div class="price-bar-fill" data-width="12%" style="background:var(--purple);">12%</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin:8px 0;">
+          <span style="width:100px; text-align:right; font-size:14px;">Database</span>
+          <div class="price-bar-track" style="flex:1;"><div class="price-bar-fill" data-width="10%" style="background:var(--blue);">10%</div></div>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; margin:8px 0;">
+          <span style="width:100px; text-align:right; font-size:14px;">Other</span>
+          <div class="price-bar-track" style="flex:1;"><div class="price-bar-fill" data-width="3%" style="background:var(--muted);">3%</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item flex-row">
+      <div class="card">
+        <div class="card-title" style="color:var(--green);">💡 Top Cost-Saving Strategies</div>
+        <div style="font-size:14px; line-height:1.8; color:var(--muted);">
+          <p>🎟️ <strong style="color:var(--text);">Reserved Instances:</strong> Commit to 1-3 years → save 40-75%</p>
+          <p>🎰 <strong style="color:var(--text);">Spot Instances:</strong> Use spare capacity → save up to 90% (can be interrupted!)</p>
+          <p>📏 <strong style="color:var(--text);">Right-sizing:</strong> Most servers are over-provisioned. Downsize by 30-50%</p>
+          <p>⏰ <strong style="color:var(--text);">Scheduling:</strong> Dev environments OFF at nights/weekends → save 65%</p>
+          <p>🗂️ <strong style="color:var(--text);">Storage tiering:</strong> Move old data to Glacier (1/10th the price)</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(248,113,113,0.08); border-color:var(--red);">
+      <p>⚠️ <strong style="color:var(--red);">Horror story:</strong> A startup left GPU instances running over a weekend = $72,000 bill. <strong>ALWAYS set billing alerts!</strong> (e.g., "Email me if bill > $1,000")</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 14: Real Architecture ═══ -->
+<div class="slide" data-slide="14">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">Real-World Architecture 🏗️</div>
+    <div class="anim-item slide-subtitle">How a typical production web app looks on AWS</div>
+
+    <div class="anim-item card" style="padding:0; overflow:hidden;">
+      <div style="background:var(--surface2); padding:8px 16px; font-size:13px; color:var(--muted);">🏗️ Typical 3-tier web application on AWS</div>
+      <div style="padding:20px; text-align:center;">
+        <div style="display:flex; flex-direction:column; gap:16px; align-items:center;">
+          <!-- Users -->
+          <div style="display:flex; gap:8px;">
+            <div class="arch-box" style="border-color:var(--muted); color:var(--text); background:rgba(148,163,184,0.1); font-size:12px;">👤 Users Worldwide</div>
+          </div>
+          <div style="color:var(--muted);">↓</div>
+
+          <!-- Edge layer -->
+          <div style="border:1px dashed var(--orange); border-radius:10px; padding:12px; width:100%; max-width:600px;">
+            <div style="font-size:11px; color:var(--orange); margin-bottom:6px;">EDGE LAYER</div>
+            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+              <div class="arch-box" style="border-color:var(--green); color:var(--green); background:rgba(52,211,153,0.1); font-size:12px;">Route 53<br>(DNS)</div>
+              <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); font-size:12px;">CloudFront<br>(CDN)</div>
+              <div class="arch-box" style="border-color:var(--red); color:var(--red); background:rgba(248,113,113,0.1); font-size:12px;">WAF<br>(Firewall)</div>
+            </div>
+          </div>
+          <div style="color:var(--muted);">↓</div>
+
+          <!-- App layer -->
+          <div style="border:1px dashed var(--blue); border-radius:10px; padding:12px; width:100%; max-width:700px;">
+            <div style="font-size:11px; color:var(--blue); margin-bottom:6px;">APPLICATION LAYER (VPC - Private Network)</div>
+            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+              <div class="arch-box" style="border-color:var(--purple); color:var(--purple); background:rgba(167,139,250,0.1); font-size:12px;">ALB<br>(Load Balancer)</div>
+              <div style="display:flex; align-items:center; color:var(--muted); font-size:14px;">→</div>
+              <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:12px;">ECS/EKS<br>(Containers)</div>
+              <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:12px;">ECS/EKS<br>(Containers)</div>
+              <div class="arch-box" style="border-color:var(--cyan); color:var(--cyan); background:rgba(34,211,238,0.1); font-size:12px;">ECS/EKS<br>(Containers)</div>
+            </div>
+          </div>
+          <div style="color:var(--muted);">↓</div>
+
+          <!-- Data layer -->
+          <div style="border:1px dashed var(--green); border-radius:10px; padding:12px; width:100%; max-width:700px;">
+            <div style="font-size:11px; color:var(--green); margin-bottom:6px;">DATA LAYER</div>
+            <div style="display:flex; gap:8px; justify-content:center; flex-wrap:wrap;">
+              <div class="arch-box" style="border-color:var(--blue); color:var(--blue); background:rgba(96,165,250,0.1); font-size:12px;">RDS<br>(PostgreSQL)</div>
+              <div class="arch-box" style="border-color:var(--red); color:var(--red); background:rgba(248,113,113,0.1); font-size:12px;">ElastiCache<br>(Redis)</div>
+              <div class="arch-box" style="border-color:var(--orange); color:var(--orange); background:rgba(251,191,36,0.1); font-size:12px;">S3<br>(Files)</div>
+              <div class="arch-box" style="border-color:var(--pink); color:var(--pink); background:rgba(244,114,182,0.1); font-size:12px;">SQS/SNS<br>(Queues)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(34,211,238,0.08); border-color:var(--cyan);">
+      <p>💡 <strong style="color:var(--cyan);">This is the same pattern everywhere.</strong> Netflix, Airbnb, Uber — all follow this layered approach. The services change, the pattern doesn't. Master the pattern, and you can build anything.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 15: Rosetta Stone ═══ -->
+<div class="slide" data-slide="15">
+  <div class="slide-inner">
+    <div class="anim-item slide-title">The Cloud Rosetta Stone 🗿</div>
+    <div class="anim-item slide-subtitle">Same concepts, different names — map services across providers</div>
+
+    <div class="anim-item" style="overflow-x:auto;">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th>Service</th>
+            <th style="color:var(--aws-orange);">🟠 AWS</th>
+            <th style="color:var(--gcp-blue);">🔵 GCP</th>
+            <th style="color:var(--azure-blue);">🔷 Azure</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Virtual Machine</strong></td> <td>EC2</td> <td>Compute Engine</td> <td>Virtual Machines</td></tr>
+          <tr><td><strong>Kubernetes</strong></td> <td>EKS</td> <td>GKE 🏆</td> <td>AKS</td></tr>
+          <tr><td><strong>Serverless</strong></td> <td>Lambda 🏆</td> <td>Cloud Functions</td> <td>Functions</td></tr>
+          <tr><td><strong>Object Storage</strong></td> <td>S3 🏆</td> <td>Cloud Storage</td> <td>Blob Storage</td></tr>
+          <tr><td><strong>SQL Database</strong></td> <td>RDS / Aurora</td> <td>Cloud SQL</td> <td>SQL Database</td></tr>
+          <tr><td><strong>NoSQL Database</strong></td> <td>DynamoDB</td> <td>Firestore</td> <td>Cosmos DB 🏆</td></tr>
+          <tr><td><strong>Message Queue</strong></td> <td>SQS / SNS</td> <td>Pub/Sub</td> <td>Service Bus</td></tr>
+          <tr><td><strong>Container Registry</strong></td> <td>ECR</td> <td>Artifact Registry</td> <td>ACR</td></tr>
+          <tr><td><strong>Data Warehouse</strong></td> <td>Redshift</td> <td>BigQuery 🏆</td> <td>Synapse</td></tr>
+          <tr><td><strong>CDN</strong></td> <td>CloudFront</td> <td>Cloud CDN</td> <td>Front Door</td></tr>
+          <tr><td><strong>DNS</strong></td> <td>Route 53</td> <td>Cloud DNS</td> <td>Azure DNS</td></tr>
+          <tr><td><strong>IAM</strong></td> <td>IAM</td> <td>IAM</td> <td>Entra ID (AAD)</td></tr>
+          <tr><td><strong>Secret Manager</strong></td> <td>Secrets Manager</td> <td>Secret Manager</td> <td>Key Vault</td></tr>
+          <tr><td><strong>Monitoring</strong></td> <td>CloudWatch</td> <td>Cloud Monitoring</td> <td>Monitor</td></tr>
+          <tr><td><strong>AI/ML Platform</strong></td> <td>SageMaker</td> <td>Vertex AI</td> <td>Azure ML + OpenAI</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="anim-item card" style="background:rgba(251,191,36,0.08); border-color:var(--orange); margin-top:12px;">
+      <p>🏆 = <strong style="color:var(--orange);">Best-in-class</strong> for that category. Learn ONE provider deeply, then the others are just name-mapping. The concepts are identical.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SLIDE 16: Summary & Learning Path ═══ -->
+<div class="slide" data-slide="16">
+  <div class="slide-inner" style="text-align:center;">
+    <div class="anim-item slide-title" style="font-size:40px;">🎉 You Now Know Cloud Computing!</div>
+    <div class="anim-item slide-subtitle">From "what is the cloud?" to production architecture — the full picture.</div>
+
+    <div class="anim-item card" style="text-align:left; max-width:800px; margin:16px auto;">
+      <div class="card-title" style="color:var(--orange);">🧪 Quick Self-Test:</div>
+      <div style="font-size:14px; line-height:2;">
+        <p>1️⃣ What's the difference between IaaS and PaaS? <span style="color:var(--muted);">← IaaS = raw server, PaaS = just deploy code</span></p>
+        <p>2️⃣ What is a VPC? <span style="color:var(--muted);">← Your private network in the cloud</span></p>
+        <p>3️⃣ Why deploy across 2+ AZs? <span style="color:var(--muted);">← If one data center fails, others keep running</span></p>
+        <p>4️⃣ What is horizontal scaling? <span style="color:var(--muted);">← Add more servers (not bigger ones)</span></p>
+        <p>5️⃣ What is IaC? <span style="color:var(--muted);">← Define infrastructure in code (Terraform), not clicks</span></p>
+        <p>6️⃣ What's the #1 cost-saving trick? <span style="color:var(--muted);">← Reserved Instances (commit 1yr = save 40-75%)</span></p>
+      </div>
+    </div>
+
+    <div class="anim-item card" style="text-align:left; max-width:800px; margin:12px auto;">
+      <div class="card-title" style="color:var(--green);">📚 Learning Path (recommended order):</div>
+      <div style="font-size:14px; line-height:2;">
+        <p>1. <strong style="color:var(--cyan);">Get hands-on:</strong> AWS Free Tier (12 months free) — launch an EC2, create S3 bucket</p>
+        <p>2. <strong style="color:var(--blue);">Learn networking:</strong> VPC, subnets, security groups (most asked in interviews)</p>
+        <p>3. <strong style="color:var(--purple);">Learn containers:</strong> Docker → Kubernetes basics → deploy on EKS/GKE</p>
+        <p>4. <strong style="color:var(--orange);">Learn IaC:</strong> Terraform (most in-demand skill after containers)</p>
+        <p>5. <strong style="color:var(--green);">Get certified:</strong> AWS Solutions Architect Associate (most valuable cloud cert)</p>
+        <p>6. <strong style="color:var(--pink);">Build a project:</strong> Deploy a real app with CI/CD, monitoring, auto-scaling</p>
+      </div>
+    </div>
+
+    <div class="anim-item" style="margin-top:16px;">
+      <p style="color:var(--muted); font-size:15px;">
+        📺 <strong>Best free courses:</strong> <em>freeCodeCamp AWS Certified Cloud Practitioner</em> (YouTube, 13hrs)<br>
+        📖 <strong>Best book:</strong> <em>"Cloud Native Patterns"</em> by Cornelia Davis<br>
+        🎮 <strong>Best hands-on:</strong> <em>AWS Skill Builder</em> (free labs + sandboxes)
+      </p>
+    </div>
+  </div>
+</div>
+
+</div><!-- end slides-wrapper -->
+
+<script>
+  let currentSlide = 0;
+  const totalSlides = document.querySelectorAll('.slide').length;
+
+  function updateUI() {
+    document.querySelectorAll('.slide').forEach((s, i) => {
+      s.classList.remove('active', 'exit-left');
+      if (i === currentSlide) s.classList.add('active');
+      else if (i < currentSlide) s.classList.add('exit-left');
+    });
+    document.getElementById('progressFill').style.width = (currentSlide / (totalSlides - 1) * 100) + '%';
+    document.getElementById('stepCounter').textContent = (currentSlide + 1) + ' / ' + totalSlides;
+    document.getElementById('btnPrev').disabled = currentSlide === 0;
+    document.getElementById('btnNext').disabled = currentSlide === totalSlides - 1;
+
+    // Slide-specific animations
+    if (currentSlide === 7) animateProbBars('#costBars');
+    if (currentSlide === 13) animateProbBars('#costBars');
+    if (currentSlide === 9) initScaleDemo();
+
+    // Scroll to top when changing slides
+    const wrapper = document.querySelector('.slides-wrapper');
+    wrapper.scrollTop = 0;
+  }
+
+  function nextSlide() { if (currentSlide < totalSlides - 1) { currentSlide++; updateUI(); updateJump(); } }
+  function prevSlide() { if (currentSlide > 0) { currentSlide--; updateUI(); updateJump(); } }
+  function goToSlide(n) { if (n >= 0 && n < totalSlides) { currentSlide = n; updateUI(); updateJump(); } }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  });
+
+  // ─── Animated bars ───
+  function animateProbBars(selector) {
+    setTimeout(() => {
+      document.querySelectorAll(selector + ' .price-bar-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width;
+      });
+    }, 600);
+  }
+
+  // ─── Auto-Scale Demo ───
+  let scaleServers = 2;
+  function initScaleDemo() {
+    scaleServers = 2;
+    renderScaleDemo();
+  }
+
+  function renderScaleDemo() {
+    const container = document.getElementById('scaleDemo');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Traffic indicator
+    const traffic = document.createElement('div');
+    traffic.style.cssText = 'width:100%; text-align:center; margin-bottom:12px; font-size:14px;';
+    const load = Math.min(100, scaleServers * 15 + Math.random() * 20);
+    const loadColor = load > 80 ? 'var(--red)' : load > 50 ? 'var(--orange)' : 'var(--green)';
+    traffic.innerHTML = `<span style="color:var(--muted);">Active Servers: </span><strong style="color:var(--cyan);">${scaleServers}</strong><span style="color:var(--muted);"> | Load: </span><strong style="color:${loadColor};">${Math.round(load)}%</strong>`;
+    container.appendChild(traffic);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex; gap:8px; justify-content:center; flex-wrap:wrap;';
+    for (let i = 0; i < scaleServers; i++) {
+      const box = document.createElement('div');
+      box.className = 'scale-box';
+      box.textContent = '🖥️';
+      box.title = `Server ${i + 1}`;
+      row.appendChild(box);
+      setTimeout(() => box.classList.add('visible'), i * 100);
+    }
+    container.appendChild(row);
+  }
+
+  function simulateScale() {
+    scaleServers = 2;
+    renderScaleDemo();
+
+    const stages = [3, 5, 8, 12, 8, 5, 3, 2];
+    stages.forEach((count, i) => {
+      setTimeout(() => {
+        scaleServers = count;
+        renderScaleDemo();
+      }, (i + 1) * 800);
+    });
+  }
+
+  // Init
+  updateUI();
+  // Slide jump dropdown
+  const jumpSelect = document.getElementById('slideJump');
+  const slideTitles = ['Title','What IS Cloud?','Big 3 Providers','IaaS/PaaS/SaaS','Regions & AZs','Compute','Storage','Networking','Security & IAM','Auto Scaling','IaC','CI/CD & DevOps','Monitoring','Cost Mgmt','Real Architecture','Rosetta Stone','Learning Path'];
+  for (let i = 0; i < totalSlides; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = (i + 1) + '. ' + (slideTitles[i] || 'Slide ' + (i + 1));
+    jumpSelect.appendChild(opt);
+  }
+  function updateJump() { jumpSelect.value = currentSlide; }
+  // Animate cost bars when they come into view
+  setTimeout(() => animateProbBars('#costBars'), 1000);
+</script>
+</body>
+</html>

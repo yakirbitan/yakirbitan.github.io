@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How LLMs Work — Animated from 0 to 100</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --blue: #60a5fa;
+    --purple: #a78bfa;
+    --green: #34d399;
+    --orange: #fbbf24;
+    --red: #f87171;
+    --pink: #f472b6;
+    --cyan: #22d3ee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow: hidden;
+    height: 100vh;
+  }
+
+  /* ─── Top Bar ─── */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(15,23,42,0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--surface2);
+    padding: 10px 24px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .topbar h1 { font-size: 16px; color: var(--blue); white-space: nowrap; }
+  .progress-track {
+    flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--blue), var(--purple), var(--green));
+    border-radius: 3px; transition: width 0.5s ease;
+  }
+  .step-counter { font-size: 14px; color: var(--muted); white-space: nowrap; }
+
+  /* ─── Controls ─── */
+  .controls {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(15,23,42,0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--surface2);
+    padding: 12px 24px;
+    display: flex; align-items: center; justify-content: center; gap: 16px;
+  }
+  .btn {
+    padding: 8px 24px; border: none; border-radius: 8px; font-size: 15px;
+    cursor: pointer; transition: all 0.2s; font-weight: 600;
+  }
+  .btn-primary { background: var(--blue); color: var(--bg); }
+  .btn-primary:hover { background: #93bbfd; transform: translateY(-1px); }
+  .btn-secondary { background: var(--surface2); color: var(--text); }
+  .btn-secondary:hover { background: #475569; }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+  .key-hint { font-size: 12px; color: var(--muted); }
+
+  /* ─── Slide Container ─── */
+  .slides-wrapper {
+    position: fixed; top: 82px; bottom: 56px; left: 0; right: 0; overflow: hidden;
+  }
+  .slide {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    padding: 30px 40px;
+    opacity: 0; transform: translateX(60px);
+    transition: opacity 0.5s, transform 0.5s;
+    pointer-events: none;
+  }
+  .slide.active {
+    opacity: 1; transform: translateX(0); pointer-events: auto;
+  }
+  .slide.exit-left {
+    opacity: 0; transform: translateX(-60px);
+  }
+  .slide-inner {
+    max-width: 1100px; width: 100%;
+  }
+
+  /* ─── Common Slide Elements ─── */
+  .slide-title {
+    font-size: 32px; font-weight: 700; margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .slide-subtitle { font-size: 18px; color: var(--muted); margin-bottom: 30px; }
+  .card {
+    background: var(--surface); border-radius: 12px; padding: 24px;
+    border: 1px solid var(--surface2); margin-bottom: 16px;
+  }
+  .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .emoji-big { font-size: 48px; margin-bottom: 12px; display: block; }
+  .highlight { color: var(--orange); font-weight: 600; }
+  .highlight-blue { color: var(--blue); font-weight: 600; }
+  .highlight-green { color: var(--green); font-weight: 600; }
+  .highlight-purple { color: var(--purple); font-weight: 600; }
+  .highlight-red { color: var(--red); font-weight: 600; }
+
+  .flex-row { display: flex; gap: 16px; flex-wrap: wrap; }
+  .flex-row > * { flex: 1; min-width: 200px; }
+
+  /* ─── Animations ─── */
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeInLeft { from { opacity:0; transform:translateX(-30px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes pulse { 0%,100% { transform:scale(1); } 50% { transform:scale(1.05); } }
+  @keyframes glow { 0%,100% { box-shadow:0 0 5px var(--blue); } 50% { box-shadow:0 0 20px var(--blue); } }
+  @keyframes flowRight { 0% { transform:translateX(-10px); opacity:0; } 50% { opacity:1; } 100% { transform:translateX(10px); opacity:0; } }
+  @keyframes bounce { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-8px); } }
+  @keyframes typewriter { from { width: 0; } to { width: 100%; } }
+  @keyframes blink { 0%,100% { opacity:1; } 50% { opacity:0; } }
+  @keyframes neuronFire {
+    0% { background: var(--surface2); box-shadow: none; }
+    50% { background: var(--orange); box-shadow: 0 0 15px var(--orange); }
+    100% { background: var(--surface2); box-shadow: none; }
+  }
+  @keyframes attentionBeam {
+    0% { stroke-dashoffset: 100; opacity: 0; }
+    30% { opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 1; }
+  }
+  @keyframes barGrow {
+    from { width: 0; }
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes rotateLoop {
+    from { stroke-dashoffset: 300; }
+    to { stroke-dashoffset: 0; }
+  }
+
+  .anim-item { opacity: 0; }
+  .slide.active .anim-item { animation: fadeInUp 0.6s ease forwards; }
+  .slide.active .anim-item:nth-child(2) { animation-delay: 0.15s; }
+  .slide.active .anim-item:nth-child(3) { animation-delay: 0.3s; }
+  .slide.active .anim-item:nth-child(4) { animation-delay: 0.45s; }
+  .slide.active .anim-item:nth-child(5) { animation-delay: 0.6s; }
+  .slide.active .anim-item:nth-child(6) { animation-delay: 0.75s; }
+  .slide.active .anim-item:nth-child(7) { animation-delay: 0.9s; }
+
+  /* ─── Token animation ─── */
+  .token-flow { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0; }
+  .token {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 8px; font-family: monospace; font-size: 16px;
+    border: 2px solid; opacity: 0;
+  }
+  .slide.active .token { animation: fadeInUp 0.4s ease forwards; }
+  .slide.active .token:nth-child(1) { animation-delay: 0.5s; }
+  .slide.active .token:nth-child(2) { animation-delay: 0.8s; }
+  .slide.active .token:nth-child(3) { animation-delay: 1.1s; }
+  .slide.active .token:nth-child(4) { animation-delay: 1.4s; }
+  .slide.active .token:nth-child(5) { animation-delay: 1.7s; }
+  .token-word { background: rgba(96,165,250,0.15); border-color: var(--blue); color: var(--blue); }
+  .token-id { background: rgba(167,139,250,0.15); border-color: var(--purple); color: var(--purple); }
+
+  .arrow-flow { color: var(--muted); font-size: 20px; display: flex; align-items: center; padding: 0 4px; opacity: 0; }
+  .slide.active .arrow-flow { animation: fadeInUp 0.3s ease forwards; }
+
+  /* ─── Embedding space ─── */
+  .embed-space {
+    position: relative; width: 100%; height: 300px;
+    background: rgba(30,41,59,0.8); border-radius: 12px; border: 1px solid var(--surface2);
+    overflow: hidden;
+  }
+  .embed-dot {
+    position: absolute; padding: 4px 10px; border-radius: 20px; font-size: 13px;
+    font-weight: 600; opacity: 0; transition: all 1s ease;
+  }
+  .slide.active .embed-dot { opacity: 1; }
+  .embed-dot.animal { background: rgba(52,211,153,0.2); color: var(--green); border: 1px solid var(--green); }
+  .embed-dot.royal { background: rgba(251,191,36,0.2); color: var(--orange); border: 1px solid var(--orange); }
+  .embed-dot.food { background: rgba(244,114,182,0.2); color: var(--pink); border: 1px solid var(--pink); }
+  .embed-dot.action { background: rgba(96,165,250,0.2); color: var(--blue); border: 1px solid var(--blue); }
+
+  /* ─── Neural network ─── */
+  .nn-container { position: relative; height: 250px; margin: 16px 0; }
+  .neuron {
+    position: absolute; width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface2); border: 2px solid var(--muted);
+    transition: all 0.3s;
+  }
+  .neuron.fired { animation: neuronFire 1s ease infinite; }
+  .nn-svg {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    pointer-events: none;
+  }
+  .nn-line { stroke: var(--surface2); stroke-width: 1; transition: all 0.5s; }
+  .nn-line.active { stroke: var(--orange); stroke-width: 2; }
+
+  /* ─── Attention ─── */
+  .attention-scene {
+    position: relative; padding: 20px; background: var(--surface);
+    border-radius: 12px; border: 1px solid var(--surface2); min-height: 200px;
+  }
+  .att-word {
+    display: inline-block; padding: 10px 18px; margin: 0 6px;
+    border-radius: 8px; font-size: 20px; font-weight: 700;
+    position: relative; z-index: 2;
+  }
+  .att-words-row { text-align: center; margin-bottom: 70px; }
+  .att-svg {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 1;
+  }
+  .att-line {
+    stroke-dasharray: 100; stroke-dashoffset: 100;
+    stroke-linecap: round;
+  }
+  .slide.active .att-line { animation: attentionBeam 1.5s ease forwards; }
+  .slide.active .att-line:nth-child(2) { animation-delay: 0.5s; }
+  .slide.active .att-line:nth-child(3) { animation-delay: 1s; }
+  .att-score {
+    position: absolute; font-size: 12px; font-weight: 700;
+    padding: 2px 6px; border-radius: 4px; background: rgba(15,23,42,0.9);
+    opacity: 0;
+  }
+  .slide.active .att-score { animation: fadeInUp 0.4s ease forwards; animation-delay: 2s; }
+
+  /* ─── Probability bars ─── */
+  .prob-bar-container { margin: 6px 0; display: flex; align-items: center; gap: 10px; }
+  .prob-label { width: 100px; text-align: right; font-family: monospace; font-size: 15px; }
+  .prob-track { flex: 1; height: 28px; background: var(--surface2); border-radius: 6px; overflow: hidden; position: relative; }
+  .prob-fill {
+    height: 100%; border-radius: 6px; display: flex; align-items: center;
+    padding-left: 10px; font-size: 13px; font-weight: 700; color: var(--bg);
+    width: 0; transition: width 1s ease;
+  }
+  .slide.active .prob-fill { /* width set via JS */ }
+  .prob-pick {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; opacity: 0;
+  }
+  .slide.active .prob-pick { animation: fadeInUp 0.4s ease forwards; animation-delay: 2s; }
+
+  /* ─── Loop animation ─── */
+  .loop-container { position: relative; height: 320px; margin: 20px 0; }
+  .loop-step {
+    position: absolute; padding: 12px 20px; border-radius: 10px;
+    font-size: 15px; font-weight: 600; border: 2px solid;
+    opacity: 0; transition: all 0.5s;
+  }
+  .slide.active .loop-step { opacity: 1; }
+
+  /* ─── Temperature viz ─── */
+  .temp-card {
+    background: var(--surface); border-radius: 12px; padding: 20px;
+    border: 2px solid; text-align: center; flex: 1;
+  }
+  .temp-card.cold { border-color: var(--blue); }
+  .temp-card.warm { border-color: var(--purple); }
+  .temp-card.hot { border-color: var(--red); }
+  .temp-icon { font-size: 40px; margin-bottom: 8px; }
+  .temp-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .temp-val { font-size: 14px; color: var(--muted); margin-bottom: 12px; }
+
+  /* ─── Training stages ─── */
+  .training-stage {
+    display: flex; gap: 16px; align-items: stretch; padding: 16px;
+    background: var(--surface); border-radius: 12px; margin-bottom: 12px;
+    border-left: 4px solid;
+  }
+  .stage-icon { font-size: 36px; display: flex; align-items: center; }
+  .stage-content { flex: 1; }
+  .stage-name { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+  .stage-desc { font-size: 14px; color: var(--muted); line-height: 1.5; }
+  .stage-stat { display: inline-block; margin-top: 6px; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 700; }
+
+  /* ─── Summary / Recap ─── */
+  .recap-item {
+    display: flex; gap: 14px; align-items: flex-start; padding: 12px 0;
+    border-bottom: 1px solid var(--surface2);
+  }
+  .recap-num {
+    width: 36px; height: 36px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; flex-shrink: 0;
+  }
+  .recap-text { font-size: 15px; line-height: 1.5; }
+  .recap-text strong { color: var(--orange); }
+
+  /* ─── Typewriter ─── */
+  .typewriter-container {
+    font-family: monospace; font-size: 22px; padding: 20px;
+    background: var(--surface); border-radius: 12px; border: 1px solid var(--surface2);
+    min-height: 60px; display: flex; align-items: center;
+  }
+  .typewriter-text { color: var(--green); }
+  .typewriter-cursor {
+    display: inline-block; width: 2px; height: 24px; background: var(--green);
+    margin-left: 2px; animation: blink 0.8s infinite;
+  }
+
+  /* Small dot grid bg */
+  .slides-wrapper::before {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, var(--surface2) 1px, transparent 1px);
+    background-size: 30px 30px;
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  /* ─── Guide Nav Bar ─── */
+  .guide-nav {
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    background:rgba(15,23,42,0.98); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--surface2); padding:6px 16px;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .guide-nav a {
+    padding:5px 14px; border-radius:6px; font-size:12px; font-weight:600;
+    text-decoration:none; color:var(--muted); transition:all 0.2s;
+    border:1px solid transparent; white-space:nowrap;
+  }
+  .guide-nav a:hover { color:var(--text); background:var(--surface2); }
+  .guide-nav a.active { color:var(--cyan); border-color:var(--cyan); background:rgba(34,211,238,0.1); }
+  .guide-nav .home-btn { color:var(--text); font-size:14px; margin-right:8px; }
+  .guide-nav .home-btn:hover { color:var(--cyan); }
+  .slide-jump { padding:4px 8px; border-radius:6px; font-size:12px; font-weight:600; background:var(--surface2); color:var(--text); border:1px solid var(--surface2); cursor:pointer; outline:none; }
+  .slide-jump:hover, .slide-jump:focus { border-color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<div class="guide-nav">
+  <a href="index.html" class="home-btn" title="Home">🏠</a>
+  <a href="learning-tiers.html">Learning Tiers</a>
+  <a href="leetcode-patterns.html">LeetCode Patterns</a>
+  <a href="system-design.html">System Design</a>
+  <a href="cloud-explained.html">Cloud Computing</a>
+  <a href="llm-explained.html" class="active">How LLMs Work</a>
+</div>
+
+<!-- Top bar -->
+<div class="topbar" style="top:36px;">
+  <h1>🧠 How LLMs Work</h1>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <span class="step-counter" id="stepCounter">1 / 12</span>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <button class="btn btn-secondary" id="btnPrev" onclick="prevSlide()">← Back</button>
+  <select class="slide-jump" id="slideJump" onchange="goToSlide(parseInt(this.value))"></select>
+  <span class="key-hint">← → keys</span>
+  <button class="btn btn-primary" id="btnNext" onclick="nextSlide()">Next →</button>
+</div>
+
+<!-- Slides -->
+<div class="slides-wrapper">
+
+  <!-- ═══ SLIDE 0: Title ═══ -->
+  <div class="slide active" data-slide="0">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="anim-item emoji-big">🧠</div>
+      <h1 class="anim-item slide-title" style="font-size:48px;">How Large Language Models Work</h1>
+      <p class="anim-item slide-subtitle" style="font-size:22px;">From your question to its answer — animated, step by step</p>
+      <div class="anim-item" style="margin-top:30px; display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+        <div class="card" style="max-width:180px; text-align:center;">
+          <div style="font-size:28px;">🔪</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px;">Tokenize</div>
+        </div>
+        <div class="card" style="max-width:180px; text-align:center;">
+          <div style="font-size:28px;">📍</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px;">Embed</div>
+        </div>
+        <div class="card" style="max-width:180px; text-align:center;">
+          <div style="font-size:28px;">👀</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px;">Attend</div>
+        </div>
+        <div class="card" style="max-width:180px; text-align:center;">
+          <div style="font-size:28px;">🧮</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px;">Think</div>
+        </div>
+        <div class="card" style="max-width:180px; text-align:center;">
+          <div style="font-size:28px;">🎯</div>
+          <div style="font-size:13px; color:var(--muted); margin-top:4px;">Predict</div>
+        </div>
+      </div>
+      <p class="anim-item" style="margin-top:24px; color:var(--muted);">Press <strong>Next →</strong> or <strong>→</strong> to begin</p>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 1: The Big Picture ═══ -->
+  <div class="slide" data-slide="1">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">The Big Picture</div>
+      <div class="anim-item slide-subtitle">An LLM does ONE thing: predict the next word. That's it. Everything else emerges from that.</div>
+      <div class="anim-item typewriter-container" id="bigPictureTypewriter">
+        <span class="typewriter-text" id="bpText"></span><span class="typewriter-cursor"></span>
+      </div>
+      <div class="anim-item" style="margin-top:24px;">
+        <div class="flex-row">
+          <div class="card" style="border-left:3px solid var(--blue);">
+            <div class="card-title" style="color:var(--blue);">Input</div>
+            <p style="color:var(--muted);">All the text so far (your prompt + what it already generated)</p>
+          </div>
+          <div class="card" style="border-left:3px solid var(--green);">
+            <div class="card-title" style="color:var(--green);">Output</div>
+            <p style="color:var(--muted);">ONE word (token). Then it feeds that word back and predicts the next one.</p>
+          </div>
+        </div>
+      </div>
+      <div class="anim-item card" style="background:rgba(251,191,36,0.1); border-color:var(--orange); margin-top:8px;">
+        <p>💡 <strong style="color:var(--orange);">Mind-blowing fact:</strong> ChatGPT doesn't "understand" your question, plan an answer, then write it. It literally guesses one word at a time, and coherent answers <em>emerge</em> from the pattern.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 2: Tokenization ═══ -->
+  <div class="slide" data-slide="2">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">Step 1: Tokenization 🔪</div>
+      <div class="anim-item slide-subtitle">Split your text into small pieces the model can understand</div>
+      <div class="anim-item card">
+        <div class="card-title">You type:</div>
+        <div style="font-size:24px; font-family:monospace; color:var(--blue); margin:8px 0;">"What are cats?"</div>
+      </div>
+      <div class="anim-item card" style="border-left:3px solid var(--purple);">
+        <div class="card-title" style="color:var(--purple);">Tokenizer splits it into pieces:</div>
+        <div class="token-flow">
+          <div class="token token-word">What<span class="arrow-flow">→</span><span class="token-id" style="display:inline; border:none; padding:0;">2061</span></div>
+          <div class="token token-word">are<span class="arrow-flow">→</span><span class="token-id" style="display:inline; border:none; padding:0;">527</span></div>
+          <div class="token token-word">cats<span class="arrow-flow">→</span><span class="token-id" style="display:inline; border:none; padding:0;">24211</span></div>
+          <div class="token token-word">?<span class="arrow-flow">→</span><span class="token-id" style="display:inline; border:none; padding:0;">30</span></div>
+        </div>
+      </div>
+      <div class="anim-item flex-row" style="margin-top:8px;">
+        <div class="card">
+          <p>🤔 <strong>Why not full words?</strong></p>
+          <p style="color:var(--muted); font-size:14px; margin-top:4px;">Long/rare words get split: "unbelievable" → "un" + "believ" + "able". This way the model only needs ~50,000 tokens instead of millions of words.</p>
+        </div>
+        <div class="card">
+          <p>💡 <strong>Not a neural network!</strong></p>
+          <p style="color:var(--muted); font-size:14px; margin-top:4px;">The tokenizer is just a lookup dictionary. No AI here — it's a simple find-and-replace. The AI starts at the next step.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 3: Embeddings ═══ -->
+  <div class="slide" data-slide="3">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">Step 2: Embeddings 📍</div>
+      <div class="anim-item slide-subtitle">Convert each token number into a vector that captures its meaning</div>
+
+      <div class="anim-item card" style="border-left:3px solid var(--purple);">
+        <div class="card-title" style="color:var(--purple);">Each number becomes a list of 4,096 numbers:</div>
+        <div style="font-family:monospace; font-size:14px; margin-top:8px; line-height:2;">
+          <span style="color:var(--blue);">2061 ("What")</span> → <span style="color:var(--green);">[0.12, -0.84, 0.31, 0.67, ..., -0.22]</span><br>
+          <span style="color:var(--blue);">527 ("are")</span>&nbsp;&nbsp; → <span style="color:var(--green);">[0.45, 0.10, -0.63, 0.18, ..., 0.91]</span><br>
+          <span style="color:var(--blue);">24211 ("cats")</span> → <span style="color:var(--green);">[-0.33, 0.92, 0.21, -0.55, ..., 0.14]</span><br>
+          <span style="color:var(--blue);">30 ("?")</span>&nbsp;&nbsp;&nbsp;&nbsp; → <span style="color:var(--green);">[0.01, -0.11, 0.05, 0.03, ..., -0.08]</span>
+        </div>
+      </div>
+
+      <div class="anim-item" style="margin-top:16px;">
+        <div class="card-title" style="margin-bottom:8px;">Similar words land close together in this space:</div>
+        <div class="embed-space" id="embedSpace">
+          <div class="embed-dot animal" style="left:15%; top:20%; transition-delay:0.3s;">cat 🐱</div>
+          <div class="embed-dot animal" style="left:20%; top:30%; transition-delay:0.5s;">dog 🐕</div>
+          <div class="embed-dot animal" style="left:12%; top:38%; transition-delay:0.7s;">hamster</div>
+          <div class="embed-dot royal" style="left:65%; top:15%; transition-delay:0.4s;">king 👑</div>
+          <div class="embed-dot royal" style="left:72%; top:25%; transition-delay:0.6s;">queen 👸</div>
+          <div class="embed-dot royal" style="left:60%; top:32%; transition-delay:0.8s;">prince</div>
+          <div class="embed-dot food" style="left:40%; top:70%; transition-delay:0.5s;">pizza 🍕</div>
+          <div class="embed-dot food" style="left:48%; top:78%; transition-delay:0.7s;">burger 🍔</div>
+          <div class="embed-dot food" style="left:35%; top:82%; transition-delay:0.9s;">sushi 🍣</div>
+          <div class="embed-dot action" style="left:78%; top:65%; transition-delay:0.6s;">run 🏃</div>
+          <div class="embed-dot action" style="left:85%; top:72%; transition-delay:0.8s;">walk 🚶</div>
+          <div style="position:absolute; bottom:8px; right:12px; font-size:12px; color:var(--muted);">4096D space (shown as 2D)</div>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="border-color:var(--orange); margin-top:12px; background:rgba(251,191,36,0.08);">
+        <p>✨ <strong style="color:var(--orange);">king − man + woman ≈ queen</strong> — The meaning is encoded in the math! Vectors learn this from reading billions of sentences.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 4: Self-Attention ═══ -->
+  <div class="slide" data-slide="4">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">Step 3: Self-Attention 👀</div>
+      <div class="anim-item slide-subtitle">Each word looks at every other word and asks: "How relevant are you to ME?"</div>
+
+      <div class="anim-item attention-scene" id="attentionScene">
+        <div class="att-words-row" id="attWordsRow">
+          <span class="att-word" id="aw0" style="background:rgba(96,165,250,0.2); color:var(--blue);">The</span>
+          <span class="att-word" id="aw1" style="background:rgba(251,191,36,0.3); color:var(--orange);" >bank</span>
+          <span class="att-word" id="aw2" style="background:rgba(96,165,250,0.2); color:var(--blue);">by</span>
+          <span class="att-word" id="aw3" style="background:rgba(52,211,153,0.2); color:var(--green);">the</span>
+          <span class="att-word" id="aw4" style="background:rgba(52,211,153,0.3); color:var(--green);">river</span>
+          <span class="att-word" id="aw5" style="background:rgba(167,139,250,0.2); color:var(--purple);">was</span>
+          <span class="att-word" id="aw6" style="background:rgba(167,139,250,0.3); color:var(--purple);">flooded</span>
+        </div>
+        <svg class="att-svg" id="attSvg" viewBox="0 0 800 200" preserveAspectRatio="xMidYMid meet">
+          <line class="att-line" x1="205" y1="45" x2="535" y2="45" stroke="var(--green)" stroke-width="4" opacity="0.8" style="animation-delay:0.5s;"/>
+          <line class="att-line" x1="205" y1="50" x2="665" y2="50" stroke="var(--purple)" stroke-width="2.5" opacity="0.6" style="animation-delay:1s;"/>
+          <line class="att-line" x1="205" y1="55" x2="100" y2="55" stroke="var(--blue)" stroke-width="1" opacity="0.3" style="animation-delay:1.5s;"/>
+        </svg>
+        <div style="text-align:center; margin-top:-30px;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:6px; background:rgba(52,211,153,0.15); color:var(--green); font-size:14px; font-weight:700; margin:0 4px;">bank → river: 0.65</span>
+          <span style="display:inline-block; padding:4px 10px; border-radius:6px; background:rgba(167,139,250,0.15); color:var(--purple); font-size:14px; font-weight:700; margin:0 4px;">bank → flooded: 0.25</span>
+          <span style="display:inline-block; padding:4px 10px; border-radius:6px; background:rgba(96,165,250,0.15); color:var(--blue); font-size:14px; font-weight:700; margin:0 4px;">bank → The: 0.05</span>
+        </div>
+      </div>
+
+      <div class="anim-item flex-row" style="margin-top:12px;">
+        <div class="card">
+          <p style="font-size:16px;"><strong style="color:var(--green);">Result:</strong> "bank" now knows it means <strong>riverbank</strong>, not a money bank. The attention scores told it!</p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--orange);">
+          <div class="card-title" style="color:var(--orange);">How? Q, K, V</div>
+          <p style="color:var(--muted); font-size:14px;">Each word makes 3 vectors:<br>
+          <strong>Query</strong> = "What am I looking for?"<br>
+          <strong>Key</strong> = "What do I contain?"<br>
+          <strong>Value</strong> = "Here's my actual info"<br>
+          Score = Query · Key (dot product)</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 5: Neural Network / Feed-Forward ═══ -->
+  <div class="slide" data-slide="5">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">Step 4: Feed-Forward Neural Network 🧮</div>
+      <div class="anim-item slide-subtitle">After attention, each position goes through a network of neurons that "thinks deeper"</div>
+
+      <div class="anim-item" style="position: relative;">
+        <div class="nn-container" id="nnContainer"></div>
+      </div>
+
+      <div class="anim-item flex-row">
+        <div class="card" style="border-left:3px solid var(--orange);">
+          <div class="card-title" style="color:var(--orange);">What each neuron does:</div>
+          <div style="font-family:monospace; font-size:16px; margin:8px 0; color:var(--green);">
+            output = ReLU(W × input + b)
+          </div>
+          <p style="color:var(--muted); font-size:14px;">
+            <strong>W</strong> = weight (how strong the connection is)<br>
+            <strong>b</strong> = bias (the neuron's preference)<br>
+            <strong>ReLU</strong> = if result &lt; 0, output 0. Else, pass it through.
+          </p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--purple);">
+          <div class="card-title" style="color:var(--purple);">Scale:</div>
+          <p style="color:var(--muted); font-size:14px;">
+            Each layer has <strong style="color:var(--text);">~16,000 neurons</strong><br>
+            Each neuron connects to <strong style="color:var(--text);">4,096 inputs</strong><br>
+            That's <strong style="color:var(--orange);">65 million weights per layer</strong><br>
+            × 96 layers = <strong style="color:var(--red);">6.2 billion</strong> just for feed-forward!
+          </p>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="background:rgba(251,191,36,0.08); border-color:var(--orange);">
+        <p>💡 <strong style="color:var(--orange);">This is the "knowledge storage."</strong> While attention figures out relationships between words, the feed-forward network stores facts like "Paris is the capital of France" in its weights.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 6: Transformer Block ═══ -->
+  <div class="slide" data-slide="6">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">The Transformer Block 🔁</div>
+      <div class="anim-item slide-subtitle">Steps 3 + 4 together form ONE Transformer Block. Stack 96 of these = GPT-4</div>
+
+      <div class="anim-item" style="display:flex; gap:12px; align-items:center; justify-content:center; flex-wrap:wrap; margin:20px 0;">
+        <div class="card" style="text-align:center; min-width:140px; border-color:var(--green); flex:0;">
+          <div style="font-size:20px;">📍 Embeddings</div>
+          <div style="font-size:12px; color:var(--muted);">Input</div>
+        </div>
+        <div style="font-size:24px; color:var(--muted);">→</div>
+        <div style="border:2px dashed var(--orange); border-radius:12px; padding:16px; text-align:center;">
+          <div style="font-size:12px; color:var(--orange); margin-bottom:8px;">TRANSFORMER BLOCK (×96)</div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <div class="card" style="margin:0; border-color:var(--green); min-width:100px;">
+              <div style="font-size:14px;">👀 Attention</div>
+            </div>
+            <div style="color:var(--muted);">→</div>
+            <div class="card" style="margin:0; border-color:var(--red); min-width:100px;">
+              <div style="font-size:14px;">🧮 Feed-Forward</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:24px; color:var(--muted);">→</div>
+        <div class="card" style="text-align:center; min-width:140px; border-color:var(--purple); flex:0;">
+          <div style="font-size:20px;">🎯 Output</div>
+          <div style="font-size:12px; color:var(--muted);">Next word</div>
+        </div>
+      </div>
+
+      <div class="anim-item flex-row">
+        <div class="card">
+          <div class="card-title" style="color:var(--blue);">Why 96 layers?</div>
+          <p style="color:var(--muted); font-size:14px;">Early layers learn simple patterns (grammar, word types). Middle layers learn facts and relationships. Deep layers learn reasoning and complex logic. More layers = more "depth of thought."</p>
+        </div>
+        <div class="card">
+          <div class="card-title" style="color:var(--green);">Layer Examples:</div>
+          <p style="font-size:14px;">
+            <span style="color:var(--blue);">Layer 1-10:</span> <span style="color:var(--muted);">"cats" is a noun, plural</span><br>
+            <span style="color:var(--purple);">Layer 30-50:</span> <span style="color:var(--muted);">"cats" are animals, pets</span><br>
+            <span style="color:var(--orange);">Layer 70-96:</span> <span style="color:var(--muted);">user is asking a question → generate informative answer</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="background:rgba(167,139,250,0.08); border-color:var(--purple);">
+        <p style="font-size:15px;">🔑 <strong style="color:var(--purple);">This stack of 96 blocks IS the neural network.</strong> The tokenizer and embedding lookup are just input wiring. Everything interesting happens in these blocks.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 7: Output / Prediction ═══ -->
+  <div class="slide" data-slide="7">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">Step 5: Output — Predicting the Next Word 🎯</div>
+      <div class="anim-item slide-subtitle">The final layer converts the hidden state into a probability for every word in the vocabulary</div>
+
+      <div class="anim-item card" style="border-left:3px solid var(--purple);">
+        <div class="card-title">Input so far: "What are cats? Cats"</div>
+        <p style="color:var(--muted); font-size:14px;">→ After 96 transformer blocks, the model outputs a score for each of ~50,000 possible next words:</p>
+      </div>
+
+      <div class="anim-item" style="margin:16px 0;" id="probBars">
+        <div class="prob-bar-container">
+          <span class="prob-label" style="color:var(--green);">"are"</span>
+          <div class="prob-track"><div class="prob-fill" style="background:var(--green);" data-width="72%">72%</div><span class="prob-pick" style="color:var(--green);">✓ PICK</span></div>
+        </div>
+        <div class="prob-bar-container">
+          <span class="prob-label" style="color:var(--blue);">"were"</span>
+          <div class="prob-track"><div class="prob-fill" style="background:var(--blue);" data-width="14%">14%</div></div>
+        </div>
+        <div class="prob-bar-container">
+          <span class="prob-label" style="color:var(--purple);">"have"</span>
+          <div class="prob-track"><div class="prob-fill" style="background:var(--purple);" data-width="8%">8%</div></div>
+        </div>
+        <div class="prob-bar-container">
+          <span class="prob-label" style="color:var(--orange);">"can"</span>
+          <div class="prob-track"><div class="prob-fill" style="background:var(--orange);" data-width="4%">4%</div></div>
+        </div>
+        <div class="prob-bar-container">
+          <span class="prob-label" style="color:var(--muted);">"is"</span>
+          <div class="prob-track"><div class="prob-fill" style="background:var(--muted);" data-width="2%">2%</div></div>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="background:rgba(52,211,153,0.08); border-color:var(--green);">
+        <p>✅ <strong style="color:var(--green);">The model picks "are"</strong> (or samples based on temperature — more on that later). This becomes the output word, and we go back to Step 1 with the new input: <span style="color:var(--blue); font-family:monospace;">"What are cats? Cats are"</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 8: Autoregressive Loop ═══ -->
+  <div class="slide" data-slide="8">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">The Autoregressive Loop 🔄</div>
+      <div class="anim-item slide-subtitle">It writes ONE word at a time, feeds it back, and repeats</div>
+
+      <div class="anim-item" id="loopAnimContainer" style="background:var(--surface); border-radius:12px; padding:24px; border:1px solid var(--surface2);">
+        <div id="loopSteps" style="font-family:monospace; font-size:16px; line-height:2.2;"></div>
+      </div>
+
+      <div class="anim-item flex-row" style="margin-top:16px;">
+        <div class="card" style="border-left:3px solid var(--red);">
+          <div class="card-title" style="color:var(--red);">It NEVER looks ahead</div>
+          <p style="color:var(--muted); font-size:14px;">It can only see words to the LEFT. Like writing with a blindfold — each word is a fresh guess based only on what came before.</p>
+        </div>
+        <div class="card" style="border-left:3px solid var(--green);">
+          <div class="card-title" style="color:var(--green);">When does it stop?</div>
+          <p style="color:var(--muted); font-size:14px;">It outputs a special [STOP] token. Or it hits the max length limit (e.g., 4096 tokens). That's why sometimes responses get cut off!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 9: Temperature ═══ -->
+  <div class="slide" data-slide="9">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">Temperature 🌡️</div>
+      <div class="anim-item slide-subtitle">Controls how "creative" vs "predictable" the model is when picking the next word</div>
+
+      <div class="anim-item flex-row">
+        <div class="temp-card cold">
+          <div class="temp-icon">🧊</div>
+          <div class="temp-title" style="color:var(--blue);">T = 0</div>
+          <div class="temp-val">Always pick the top word</div>
+          <div style="text-align:left; font-size:14px; line-height:1.8;">
+            <div>are <span style="float:right; color:var(--blue); font-weight:700;">72% ✓</span></div>
+            <div style="color:var(--muted);">were <span style="float:right;">14%</span></div>
+            <div style="color:var(--muted);">have <span style="float:right;">8%</span></div>
+          </div>
+          <div style="margin-top:12px; padding:8px; background:rgba(96,165,250,0.1); border-radius:6px; font-size:13px; color:var(--blue);">
+            Predictable, deterministic.<br>Best for code & facts.
+          </div>
+        </div>
+        <div class="temp-card warm">
+          <div class="temp-icon">♨️</div>
+          <div class="temp-title" style="color:var(--purple);">T = 0.7</div>
+          <div class="temp-val">Mostly top words, some variety</div>
+          <div style="text-align:left; font-size:14px; line-height:1.8;">
+            <div>are <span style="float:right; color:var(--purple);">52% ← usually</span></div>
+            <div>were <span style="float:right; color:var(--purple);">28% ← sometimes</span></div>
+            <div style="color:var(--muted);">have <span style="float:right;">15%</span></div>
+          </div>
+          <div style="margin-top:12px; padding:8px; background:rgba(167,139,250,0.1); border-radius:6px; font-size:13px; color:var(--purple);">
+            Creative but coherent.<br>ChatGPT default ≈ 0.7
+          </div>
+        </div>
+        <div class="temp-card hot">
+          <div class="temp-icon">🔥</div>
+          <div class="temp-title" style="color:var(--red);">T = 2.0</div>
+          <div class="temp-val">Nearly random from all words</div>
+          <div style="text-align:left; font-size:14px; line-height:1.8;">
+            <div style="color:var(--muted);">are <span style="float:right;">30%</span></div>
+            <div style="color:var(--muted);">were <span style="float:right;">27%</span></div>
+            <div>have <span style="float:right; color:var(--red);">25% ← 🎲 picked!</span></div>
+          </div>
+          <div style="margin-top:12px; padding:8px; background:rgba(248,113,113,0.1); border-radius:6px; font-size:13px; color:var(--red);">
+            Chaotic, often nonsense.<br>Fun for brainstorming.
+          </div>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="margin-top:12px; background:rgba(251,191,36,0.08); border-color:var(--orange);">
+        <p>💡 <strong style="color:var(--orange);">Temperature adjusts the probability distribution.</strong> T=0 makes the highest bar take everything. T=2 flattens all bars to nearly equal. The math: divide all scores by T before softmax.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 10: Training ═══ -->
+  <div class="slide" data-slide="10">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">How Was It Trained? 🎓</div>
+      <div class="anim-item slide-subtitle">3 stages, from baby to expert — each stage builds on the previous</div>
+
+      <div class="anim-item training-stage" style="border-color:var(--blue);">
+        <div class="stage-icon">👶</div>
+        <div class="stage-content">
+          <div class="stage-name" style="color:var(--blue);">Phase 1: Pre-training (Read the internet)</div>
+          <div class="stage-desc">
+            Feed it <strong>trillions of words</strong> from books, Wikipedia, websites, code. For each word, it guesses the next one. If wrong → adjust all 1.8T weights slightly. Repeat billions of times.
+          </div>
+          <span class="stage-stat" style="background:rgba(96,165,250,0.15); color:var(--blue);">~$100M+ cost | 3-6 months | 10,000 GPUs</span>
+        </div>
+      </div>
+
+      <div class="anim-item training-stage" style="border-color:var(--purple);">
+        <div class="stage-icon">🧒</div>
+        <div class="stage-content">
+          <div class="stage-name" style="color:var(--purple);">Phase 2: Instruction Fine-tuning (Learn to be helpful)</div>
+          <div class="stage-desc">
+            Humans write <strong>100,000+ example Q&A pairs</strong>: "Q: What is gravity? A: Gravity is a force that..." The model learns the format of being a helpful assistant instead of just predicting text.
+          </div>
+          <span class="stage-stat" style="background:rgba(167,139,250,0.15); color:var(--purple);">~$1M cost | Days-weeks | 100s of GPUs</span>
+        </div>
+      </div>
+
+      <div class="anim-item training-stage" style="border-color:var(--green);">
+        <div class="stage-icon">🧑‍🎓</div>
+        <div class="stage-content">
+          <div class="stage-name" style="color:var(--green);">Phase 3: RLHF (Learn right from wrong)</div>
+          <div class="stage-desc">
+            Model generates multiple answers. <strong>Humans rank them</strong> (best → worst). A "reward model" learns what humans prefer. Then the main model is optimized to get higher rewards. This is why ChatGPT refuses harmful requests.
+          </div>
+          <span class="stage-stat" style="background:rgba(52,211,153,0.15); color:var(--green);">~$500K | Weeks | Ongoing process</span>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="background:rgba(248,113,113,0.08); border-color:var(--red);">
+        <p>🧠 <strong style="color:var(--red);">What IS training technically?</strong> Adjusting 1.8 trillion numbers (weights) so the model's predictions match the correct answers. The algorithm: <strong>backpropagation</strong> — compute the error, then send it backwards through all layers, nudging each weight to reduce the error.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 11: Full Recap ═══ -->
+  <div class="slide" data-slide="11">
+    <div class="slide-inner">
+      <div class="anim-item slide-title">The Complete Picture 🗺️</div>
+      <div class="anim-item slide-subtitle">Everything together — from your question to the answer</div>
+
+      <div class="anim-item">
+        <div class="recap-item">
+          <div class="recap-num" style="background:rgba(96,165,250,0.2); color:var(--blue);">1</div>
+          <div class="recap-text"><strong style="color:var(--blue);">Tokenize:</strong> Split your text into pieces → numbers. Just a dictionary lookup, no AI.</div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num" style="background:rgba(167,139,250,0.2); color:var(--purple);">2</div>
+          <div class="recap-text"><strong style="color:var(--purple);">Embed:</strong> Convert each number into a 4,096-dimension vector that captures meaning. Similar words = close vectors.</div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num" style="background:rgba(52,211,153,0.2); color:var(--green);">3</div>
+          <div class="recap-text"><strong style="color:var(--green);">Self-Attention:</strong> Every word looks at every other word. "bank" sees "river" and knows it's a riverbank. Q·K scores determine relevance.</div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num" style="background:rgba(248,113,113,0.2); color:var(--red);">4</div>
+          <div class="recap-text"><strong style="color:var(--red);">Feed-Forward:</strong> Each position goes through a network of neurons. This is where "facts" are stored in the weights. <em>output = ReLU(W×input+b)</em>.</div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num" style="background:rgba(251,191,36,0.2); color:var(--orange);">×96</div>
+          <div class="recap-text"><strong>Steps 3+4 repeat 96 times.</strong> Early layers: grammar. Middle layers: facts. Deep layers: reasoning. This stack IS the neural network.</div>
+        </div>
+        <div class="recap-item">
+          <div class="recap-num" style="background:rgba(244,114,182,0.2); color:var(--pink);">5</div>
+          <div class="recap-text"><strong style="color:var(--pink);">Output:</strong> Score all 50,000 possible next words. Pick one (based on temperature). Feed it back in. Repeat until [STOP].</div>
+        </div>
+      </div>
+
+      <div class="anim-item card" style="border-color:var(--green); margin-top:12px; background:rgba(52,211,153,0.08);">
+        <p style="font-size:16px; text-align:center;">
+          🎓 <strong style="color:var(--green);">Training</strong> = finding the best 1.8 trillion W and b values, using backpropagation across trillions of words.
+          <br>
+          🔮 <strong style="color:var(--purple);">Inference</strong> = using those frozen values to predict words, one at a time, in the autoregressive loop.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ SLIDE 12: Interactive Demo ═══ -->
+  <div class="slide" data-slide="12">
+    <div class="slide-inner" style="text-align:center;">
+      <div class="anim-item slide-title" style="font-size:40px;">🎉 Now You Know How LLMs Work!</div>
+      <div class="anim-item slide-subtitle" style="font-size:18px;">From tokenization to training — the full picture.</div>
+      <div class="anim-item" style="margin:24px auto; max-width:800px;">
+        <div class="card" style="text-align:left;">
+          <div class="card-title" style="color:var(--orange);">🧪 Quick Self-Test — Can you answer these?</div>
+          <div style="line-height:2; font-size:15px; margin-top:10px;">
+            <p>1️⃣ Does the LLM "plan" the full answer before writing? <span style="color:var(--muted);">← No! One word at a time</span></p>
+            <p>2️⃣ What makes "bank" know it's a riverbank? <span style="color:var(--muted);">← Self-Attention looks at "river"</span></p>
+            <p>3️⃣ Where are facts stored? <span style="color:var(--muted);">← Feed-Forward Network weights</span></p>
+            <p>4️⃣ What does Temperature=0 do? <span style="color:var(--muted);">← Always picks highest probability</span></p>
+            <p>5️⃣ What are "parameters"? <span style="color:var(--muted);">← The W (weights) and b (biases) = learned numbers</span></p>
+            <p>6️⃣ What does RLHF do? <span style="color:var(--muted);">← Humans rank outputs → model learns human preferences</span></p>
+          </div>
+        </div>
+      </div>
+      <div class="anim-item" style="margin-top:20px;">
+        <p style="color:var(--muted);">Recommended deep-dives:</p>
+        <p style="font-size:16px; margin-top:8px;">
+          📺 <strong>3Blue1Brown</strong> — "Neural Networks" & "Attention in Transformers" playlists<br>
+          📺 <strong>Andrej Karpathy</strong> — "Let's Build GPT from Scratch" (2 hours, builds it in Python)<br>
+          📖 <strong>Jay Alammar</strong> — "The Illustrated Transformer" (best written visual guide)
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ─── Slide Management ───
+  let currentSlide = 0;
+  const totalSlides = 13; // 0-12
+
+  function updateUI() {
+    document.querySelectorAll('.slide').forEach((s, i) => {
+      s.classList.remove('active', 'exit-left');
+      if (i === currentSlide) s.classList.add('active');
+      else if (i < currentSlide) s.classList.add('exit-left');
+    });
+    document.getElementById('progressFill').style.width = (currentSlide / (totalSlides - 1) * 100) + '%';
+    document.getElementById('stepCounter').textContent = (currentSlide + 1) + ' / ' + totalSlides;
+    document.getElementById('btnPrev').disabled = currentSlide === 0;
+    document.getElementById('btnNext').disabled = currentSlide === totalSlides - 1;
+
+    // Trigger slide-specific animations
+    if (currentSlide === 1) runBigPictureTypewriter();
+    if (currentSlide === 5) initNeuralNetwork();
+    if (currentSlide === 7) animateProbBars();
+    if (currentSlide === 8) animateLoop();
+  }
+
+  function nextSlide() {
+    if (currentSlide < totalSlides - 1) { currentSlide++; updateUI(); updateJump(); }
+  }
+  function prevSlide() {
+    if (currentSlide > 0) { currentSlide--; updateUI(); updateJump(); }
+  }
+  function goToSlide(n) {
+    if (n >= 0 && n < totalSlides) { currentSlide = n; updateUI(); updateJump(); }
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextSlide(); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); prevSlide(); }
+  });
+
+  // ─── Typewriter (Slide 1) ───
+  let twTimeout;
+  function runBigPictureTypewriter() {
+    clearTimeout(twTimeout);
+    const el = document.getElementById('bpText');
+    const text = '"What are cats? " → LLM → "Cats" → LLM → "are" → LLM → "fascinating" → LLM → "creatures" → [STOP]';
+    el.textContent = '';
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        el.textContent += text[i];
+        i++;
+        twTimeout = setTimeout(type, 40);
+      }
+    }
+    setTimeout(type, 600);
+  }
+
+  // ─── Neural Network Animation (Slide 5) ───
+  function initNeuralNetwork() {
+    const container = document.getElementById('nnContainer');
+    container.innerHTML = '';
+
+    const layers = [4, 8, 12, 8, 4];
+    const layerX = [60, 200, 370, 540, 700];
+    const spacing = [50, 28, 20, 28, 50];
+    const colors = ['var(--blue)', 'var(--purple)', 'var(--orange)', 'var(--purple)', 'var(--green)'];
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.classList.add('nn-svg');
+    svg.setAttribute('viewBox', '0 0 780 250');
+    container.appendChild(svg);
+
+    const positions = [];
+    layers.forEach((count, li) => {
+      const pos = [];
+      const startY = (250 - count * spacing[li]) / 2;
+      for (let ni = 0; ni < count; ni++) {
+        const x = layerX[li];
+        const y = startY + ni * spacing[li];
+        pos.push({x: x + 14, y: y + 14});
+
+        const neuron = document.createElement('div');
+        neuron.className = 'neuron';
+        neuron.style.left = x + 'px';
+        neuron.style.top = y + 'px';
+        neuron.style.borderColor = colors[li];
+        neuron.dataset.layer = li;
+        neuron.dataset.index = ni;
+        container.appendChild(neuron);
+      }
+      positions.push(pos);
+    });
+
+    // Draw connections
+    for (let li = 0; li < positions.length - 1; li++) {
+      positions[li].forEach(p1 => {
+        positions[li + 1].forEach(p2 => {
+          const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+          line.setAttribute('x1', p1.x);
+          line.setAttribute('y1', p1.y);
+          line.setAttribute('x2', p2.x);
+          line.setAttribute('y2', p2.y);
+          line.classList.add('nn-line');
+          line.dataset.fromLayer = li;
+          svg.appendChild(line);
+        });
+      });
+    }
+
+    // Labels
+    const labelDiv = document.createElement('div');
+    labelDiv.style.cssText = 'position:absolute; bottom:0; width:100%; display:flex; justify-content:space-around; font-size:12px; color:var(--muted); padding:0 30px;';
+    labelDiv.innerHTML = '<span style="color:var(--blue)">Input (4096)</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--orange)">Hidden (16K neurons)</span><span style="color:var(--purple)">Hidden</span><span style="color:var(--green)">Output (4096)</span>';
+    container.appendChild(labelDiv);
+
+    // Animate firing
+    let fireLayer = 0;
+    function fireWave() {
+      const neurons = container.querySelectorAll('.neuron');
+      const lines = svg.querySelectorAll('.nn-line');
+
+      neurons.forEach(n => { n.classList.remove('fired'); });
+      lines.forEach(l => { l.classList.remove('active'); });
+
+      neurons.forEach(n => {
+        if (parseInt(n.dataset.layer) === fireLayer) n.classList.add('fired');
+      });
+      lines.forEach(l => {
+        if (parseInt(l.dataset.fromLayer) === fireLayer) l.classList.add('active');
+      });
+
+      fireLayer = (fireLayer + 1) % layers.length;
+    }
+    const intv = setInterval(fireWave, 600);
+    // Clean up when leaving slide
+    const observer = new MutationObserver(() => {
+      const slide = document.querySelector('[data-slide="5"]');
+      if (!slide.classList.contains('active')) {
+        clearInterval(intv);
+        observer.disconnect();
+      }
+    });
+    observer.observe(document.querySelector('[data-slide="5"]'), { attributes: true });
+
+    fireWave();
+  }
+
+  // ─── Prob Bars (Slide 7) ───
+  function animateProbBars() {
+    setTimeout(() => {
+      document.querySelectorAll('#probBars .prob-fill').forEach(bar => {
+        bar.style.width = bar.dataset.width;
+      });
+    }, 500);
+  }
+
+  // ─── Loop Animation (Slide 8) ───
+  function animateLoop() {
+    const container = document.getElementById('loopSteps');
+    container.innerHTML = '';
+    const steps = [
+      { input: '"What are cats?"', output: 'Cats', delay: 0 },
+      { input: '"What are cats? Cats"', output: 'are', delay: 1200 },
+      { input: '"What are cats? Cats are"', output: 'fascinating', delay: 2400 },
+      { input: '"What are cats? Cats are fascinating"', output: 'creatures', delay: 3600 },
+      { input: '"What are cats? Cats are fascinating creatures"', output: 'that', delay: 4800 },
+      { input: '"...creatures that"', output: '...', delay: 6000 },
+      { input: '"...full sentence..."', output: '[STOP] ✅', delay: 7200 },
+    ];
+
+    steps.forEach((step, i) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'opacity:0; transform:translateY(10px); transition:all 0.5s; display:flex; align-items:center; gap:8px; padding:4px 0;';
+      div.innerHTML = `
+        <span style="color:var(--muted); width:55px; flex-shrink:0; font-size:13px;">Step ${i + 1}:</span>
+        <span style="color:var(--blue); flex:1; font-size:14px;">${step.input}</span>
+        <span style="color:var(--muted);">→ 🧠 →</span>
+        <span style="color:var(--green); font-weight:700; width:120px; text-align:center; padding:4px 8px; background:rgba(52,211,153,0.15); border-radius:6px;">${step.output}</span>
+      `;
+      container.appendChild(div);
+
+      setTimeout(() => {
+        div.style.opacity = '1';
+        div.style.transform = 'translateY(0)';
+      }, step.delay);
+    });
+  }
+
+  // Init
+  updateUI();
+
+  // Slide jump dropdown
+  const jumpSelect = document.getElementById('slideJump');
+  const slideTitles = ['Title','Big Picture','Tokenization','Embeddings','Self-Attention','Feed-Forward NN','Transformer Block','Output','Autoregressive Loop','Temperature','Training','Full Recap','Interactive Demo'];
+  for (let i = 0; i < totalSlides; i++) {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = (i + 1) + '. ' + (slideTitles[i] || 'Slide ' + (i + 1));
+    jumpSelect.appendChild(opt);
+  }
+  function updateJump() { jumpSelect.value = currentSlide; }
+</script>
+</body>
+</html>
