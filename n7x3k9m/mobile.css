@@ -1,0 +1,186 @@
+/* ═══ Mobile PWA Enhancements ═══ */
+/* Only affects screens <= 500px — desktop is untouched */
+
+@media (max-width: 500px) {
+  /* ─── Safe area insets for notch/dynamic island ─── */
+  body {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* ─── Hide original guide-nav, replaced by hamburger ─── */
+  .guide-nav {
+    display: none !important;
+  }
+
+  /* ─── Hamburger topbar ─── */
+  .mobile-topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 300;
+    background: rgba(15,23,42,0.98); backdrop-filter: blur(10px);
+    border-bottom: 1px solid #334155;
+    padding: 8px 16px;
+    padding-top: calc(8px + env(safe-area-inset-top));
+    display: flex; align-items: center; gap: 12px;
+    height: auto; min-height: 44px;
+  }
+  .hamburger-btn {
+    background: none; border: none; color: #e2e8f0;
+    font-size: 22px; cursor: pointer; padding: 4px 8px;
+    line-height: 1; display: flex; align-items: center;
+  }
+  .mobile-topbar .page-title {
+    flex: 1; font-size: 14px; font-weight: 700;
+    color: #22d3ee; white-space: nowrap; overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .mobile-topbar .step-info {
+    font-size: 12px; color: #94a3b8; white-space: nowrap;
+  }
+
+  /* ─── Hamburger dropdown menu ─── */
+  .mobile-menu {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    z-index: 290; display: none;
+  }
+  .mobile-menu.open { display: block; }
+  .mobile-menu-overlay {
+    position: absolute; inset: 0;
+    background: rgba(0,0,0,0.6);
+  }
+  .mobile-menu-content {
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 260px; background: #1e293b;
+    padding: 20px 0;
+    padding-top: calc(20px + env(safe-area-inset-top));
+    box-shadow: 4px 0 20px rgba(0,0,0,0.5);
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .mobile-menu.open .mobile-menu-content {
+    transform: translateX(0);
+  }
+  .mobile-menu-content a {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; color: #94a3b8;
+    text-decoration: none; font-size: 15px; font-weight: 600;
+    transition: all 0.15s;
+  }
+  .mobile-menu-content a:hover,
+  .mobile-menu-content a.active {
+    background: rgba(34,211,238,0.08); color: #22d3ee;
+  }
+  .mobile-menu-content a .menu-icon {
+    font-size: 18px; min-width: 24px; text-align: center;
+  }
+
+  /* ─── Adjust existing topbar position ─── */
+  .topbar {
+    top: calc(44px + env(safe-area-inset-top)) !important;
+    padding: 8px 16px !important;
+  }
+  .topbar h1 { font-size: 0 !important; width: 0; overflow: hidden; }
+
+  /* ─── Slides wrapper offset ─── */
+  .slides-wrapper {
+    top: calc(80px + env(safe-area-inset-top)) !important;
+    bottom: calc(52px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* ─── Compact bottom controls ─── */
+  .controls {
+    padding: 8px 12px !important;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+    gap: 8px !important;
+  }
+  .controls .key-hint { display: none !important; }
+  .controls .btn {
+    padding: 8px 16px !important; font-size: 14px !important;
+  }
+  .controls .slide-jump {
+    flex: 1; min-width: 0;
+  }
+
+  /* ─── Slide content responsive ─── */
+  .slide { padding: 16px 14px !important; }
+  .slide-inner { padding-bottom: 20px !important; }
+  .slide-title { font-size: 22px !important; }
+  .slide-subtitle { font-size: 13px !important; }
+
+  /* Pattern cards - single column */
+  .patterns-grid { grid-template-columns: 1fr !important; }
+  .pattern-card { padding: 12px !important; }
+  .pattern-name { font-size: 14px !important; }
+  .pattern-what { font-size: 12px !important; }
+  .pattern-key { font-size: 11px !important; }
+
+  /* Overview grid - 2 columns on mobile */
+  .overview-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+  .overview-card { padding: 10px !important; }
+  .overview-emoji { font-size: 24px !important; }
+  .overview-tier { font-size: 16px !important; }
+  .overview-label { font-size: 12px !important; }
+  .overview-count { font-size: 11px !important; }
+
+  /* Hero slide */
+  .hero { min-height: auto !important; padding: 10px !important; }
+  .hero-title { font-size: 32px !important; }
+  .hero-sub { font-size: 14px !important; }
+  .hero-pills { gap: 6px !important; }
+  .hero-pill { padding: 4px 10px !important; font-size: 11px !important; }
+
+  /* Week cards */
+  .week-cards { grid-template-columns: 1fr !important; }
+
+  /* Tier header */
+  .tier-header { padding: 10px 14px !important; gap: 10px !important; flex-wrap: wrap; }
+  .tier-badge { font-size: 20px !important; min-width: 40px !important; padding: 4px 8px !important; }
+  .tier-info h2 { font-size: 16px !important; }
+  .tier-info p { font-size: 12px !important; }
+  .tier-time { font-size: 11px !important; }
+
+  /* Tables */
+  .tier-table { font-size: 11px !important; }
+  .tier-table td, .tier-table th { padding: 3px 6px !important; }
+
+  /* Note box */
+  .note-box { font-size: 12px !important; padding: 10px 12px !important; }
+
+  /* Tier rainbow */
+  .tier-rainbow { gap: 6px !important; }
+  .tr-item { padding: 5px 10px !important; font-size: 11px !important; }
+
+  /* ─── LLM-specific ─── */
+  .concept-grid { grid-template-columns: 1fr !important; }
+  .step-grid { grid-template-columns: 1fr !important; }
+  .compare-grid { grid-template-columns: 1fr !important; }
+  .arch-grid { grid-template-columns: 1fr !important; }
+  .token-grid { grid-template-columns: 1fr !important; }
+  .timeline-grid { grid-template-columns: 1fr !important; }
+  .layer-grid { grid-template-columns: 1fr !important; }
+
+  /* ─── System Design specific ─── */
+  .sd-grid { grid-template-columns: 1fr !important; }
+  .component-grid { grid-template-columns: 1fr !important; }
+  .db-grid { grid-template-columns: 1fr !important; }
+  .cache-grid { grid-template-columns: 1fr !important; }
+  .mq-grid { grid-template-columns: 1fr !important; }
+
+  /* ─── Cloud specific ─── */
+  .provider-grid { grid-template-columns: 1fr !important; }
+  .service-grid { grid-template-columns: 1fr !important; }
+  .region-grid { grid-template-columns: 1fr !important; }
+
+  /* Generic multi-column grids fallback */
+  [class*="-grid"] { grid-template-columns: 1fr !important; }
+
+  /* ─── Hub/Index page ─── */
+  .hub { padding: 24px 16px !important; }
+  .hub-title { font-size: 28px !important; }
+  .hub-sub { font-size: 14px !important; margin-bottom: 32px !important; }
+  .nav-card { padding: 14px 16px !important; gap: 12px !important; }
+  .nav-icon { font-size: 28px !important; min-width: 36px !important; }
+  .nav-info h2 { font-size: 16px !important; }
+  .nav-info p { font-size: 12px !important; }
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Interview Mastery Hub",
+  "short_name": "Mastery Hub",
+  "start_url": "/n7x3k9m/",
+  "scope": "/n7x3k9m/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}
